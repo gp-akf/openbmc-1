@@ -5,7 +5,7 @@ LIC_FILES_CHKSUM = "file://${COREBASE}/meta/files/common-licenses/Apache-2.0;md5
 
 inherit systemd
 
-FILESEXTRAPATHS_prepend := "${THISDIR}/${PN}:"
+FILESEXTRAPATHS:prepend := "${THISDIR}/${PN}:"
 SRC_URI += " \
   file://-bmc-gbmcbr.netdev \
   file://-bmc-gbmcbr.network.in \
@@ -20,24 +20,39 @@ SRC_URI += " \
   file://gbmc-br-ensure-ra.service \
   file://gbmc-br-gw-src.sh \
   file://gbmc-br-nft.sh \
+  file://gbmc-br-dhcp.sh \
+  file://50-gbmc-psu-hardreset.sh \
+  file://gbmc-br-dhcp.service \
+  file://gbmc-br-dhcp-term.sh \
+  file://gbmc-br-dhcp-term.service \
+  file://gbmc-br-lib.sh \
+  file://gbmc-br-load-ip.service \
   "
 
-FILES_${PN}_append = " \
+FILES:${PN}:append = " \
   ${datadir}/gbmc-ip-monitor \
+  ${datadir}/gbmc-br-dhcp \
+  ${datadir}/gbmc-br-lib.sh \
   ${systemd_unitdir}/network \
   ${sysconfdir}/nftables \
   ${sysconfdir}/avahi/services \
   "
 
-RDEPENDS_${PN}_append = " \
+RDEPENDS:${PN}:append = " \
   bash \
+  dhcp-done \
   gbmc-ip-monitor \
   mstpd-mstpd \
   network-sh \
   ndisc6-rdisc6 \
   "
 
-SYSTEMD_SERVICE_${PN} += "gbmc-br-ensure-ra.service"
+SYSTEMD_SERVICE:${PN} += " \
+  gbmc-br-ensure-ra.service \
+  gbmc-br-dhcp.service \
+  gbmc-br-dhcp-term.service \
+  gbmc-br-load-ip.service \
+  "
 
 GBMC_BR_MAC_ADDR ?= ""
 
@@ -94,11 +109,20 @@ do_install() {
 
   install -d -m0755 ${D}${libexecdir}
   install -m0755 ${WORKDIR}/gbmc-br-ensure-ra.sh ${D}${libexecdir}/
+  install -m0755 ${WORKDIR}/gbmc-br-dhcp.sh ${D}${libexecdir}/
+  install -m0755 ${WORKDIR}/gbmc-br-dhcp-term.sh ${D}${libexecdir}/
   install -d -m0755 ${D}${systemd_system_unitdir}
-  install -m0755 ${WORKDIR}/gbmc-br-ensure-ra.service ${D}${systemd_system_unitdir}/
+  install -m0644 ${WORKDIR}/gbmc-br-ensure-ra.service ${D}${systemd_system_unitdir}/
+  install -m0644 ${WORKDIR}/gbmc-br-dhcp.service ${D}${systemd_system_unitdir}/
+  install -m0644 ${WORKDIR}/gbmc-br-dhcp-term.service ${D}${systemd_system_unitdir}/
+  install -m0644 ${WORKDIR}/gbmc-br-load-ip.service ${D}${systemd_system_unitdir}/
+  install -d -m0755 ${D}${datadir}/gbmc-br-dhcp
+  install -m0644 ${WORKDIR}/50-gbmc-psu-hardreset.sh ${D}${datadir}/gbmc-br-dhcp/
+
+  install -m0644 ${WORKDIR}/gbmc-br-lib.sh ${D}${datadir}/
 }
 
-do_rm_work_prepend() {
+do_rm_work:prepend() {
   # HACK: Work around broken do_rm_work not properly calling rm with `--`
   # It doesn't like filenames that start with `-`
   rm -rf -- ${WORKDIR}/-*

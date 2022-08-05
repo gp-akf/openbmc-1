@@ -6,12 +6,11 @@ PV = "0.1+git${SRCPV}"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
-inherit autotools pkgconfig
+inherit meson pkgconfig
 
-DEPENDS += "autoconf-archive-native"
-
-EXTRA_OECONF = "--disable-tests"
+EXTRA_OEMESON = "-Dtests=disabled"
 
 S = "${WORKDIR}/git"
-SRC_URI = "git://github.com/openbmc/ipmi-blob-tool"
-SRCREV = "8da5f72db5a9d3374570cb860f52f35d518ac1c2"
+SRC_URI = "git://github.com/openbmc/ipmi-blob-tool;branch=master;protocol=https"
+SRCREV = "e76b4bc14747339d09d15b34ce945451affb75e6"
+

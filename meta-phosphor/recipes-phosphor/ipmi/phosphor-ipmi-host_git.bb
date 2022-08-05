@@ -5,9 +5,9 @@ PV = "1.0+git${SRCPV}"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=86d3f3a95c324c9479bd8986968f4327"
 
-RRECOMMENDS_${PN} += "packagegroup-obmc-ipmid-providers-libs"
+RRECOMMENDS:${PN} += "packagegroup-obmc-ipmid-providers-libs"
 
-inherit autotools pkgconfig
+inherit meson pkgconfig
 inherit obmc-phosphor-ipmiprovider-symlink
 inherit obmc-phosphor-sdbus-service
 inherit obmc-phosphor-systemd
@@ -21,10 +21,20 @@ def ipmi_whitelists(d):
     whitelists = [ '{}-whitelist-native'.format(x) for x in whitelists ]
     return ' '.join(whitelists)
 
-PACKAGECONFIG ??= ""
-PACKAGECONFIG[dynamic-sensors] = "--enable-dynamic-sensors,--disable-dynamic-sensors"
+PACKAGECONFIG ??= "allowlist i2c-allowlist boot-flag-safe-mode softoff libuserlayer"
+PACKAGECONFIG[dynamic-sensors] = "-Ddynamic-sensors=enabled,-Ddynamic-sensors=disabled"
+PACKAGECONFIG[hybrid-sensors] = "-Dhybrid-sensors=enabled,-Dhybrid-sensors=disabled"
+PACKAGECONFIG[sel-logger-clears-sel] = "-Dsel-logger-clears-sel=enabled,-Dsel-logger-clears-sel=disabled"
+PACKAGECONFIG[allowlist] = "-Dipmi-whitelist=enabled,-Dipmi-whitelist=disabled"
+PACKAGECONFIG[i2c-allowlist] = "-Di2c-whitelist-check=enabled,-Di2c-whitelist-check=disabled"
+PACKAGECONFIG[transport-oem] = "-Dtransport-oem=enabled,-Dtransport-oem=disabled"
+PACKAGECONFIG[boot-flag-safe-mode] = "-Dboot-flag-safe-mode-support=enabled,-Dboot-flag-safe-mode-support=disabled"
+PACKAGECONFIG[softoff] = "-Dsoftoff=enabled,-Dsoftoff=disabled"
+PACKAGECONFIG[update-functional-on-fail] = "-Dupdate-functional-on-fail=enabled,-Dupdate-functional-on-fail=disabled"
+PACKAGECONFIG[libuserlayer] = "-Dlibuserlayer=enabled,-Dlibuserlayer=disabled"
+PACKAGECONFIG[sensors-cache] = "-Dsensors-cache=enabled,-Dsensors-cache=disabled"
 
-DEPENDS += "autoconf-archive-native"
+
 DEPENDS += "nlohmann-json"
 DEPENDS += "phosphor-state-manager"
 DEPENDS += "${@ipmi_whitelists(d)}"
@@ -44,26 +54,24 @@ DEPENDS += "${PYTHON_PN}-mako-native"
 
 VIRTUAL-RUNTIME_ipmi-config ?= "phosphor-ipmi-config"
 
-RDEPENDS_${PN}-dev += "phosphor-logging"
-RDEPENDS_${PN}-dev += "phosphor-mapper-dev"
-RDEPENDS_${PN} += "clear-once"
-RDEPENDS_${PN} += "phosphor-network"
-RDEPENDS_${PN} += "phosphor-time-manager"
-RDEPENDS_${PN} += "${VIRTUAL-RUNTIME_ipmi-config}"
-RDEPENDS_${PN} += "virtual/obmc-watchdog"
-RDEPENDS_${PN} += "${VIRTUAL-RUNTIME_obmc-bmc-state-manager}"
-RDEPENDS_${PN} += "${VIRTUAL-RUNTIME_obmc-bmc-version}"
-RDEPENDS_${PN} += "${VIRTUAL-RUNTIME_obmc-bmc-updater}"
+RDEPENDS:${PN} += "clear-once"
+RDEPENDS:${PN} += "phosphor-network"
+RDEPENDS:${PN} += "phosphor-time-manager"
+RDEPENDS:${PN} += "${VIRTUAL-RUNTIME_ipmi-config}"
+RDEPENDS:${PN} += "virtual/obmc-watchdog"
+RDEPENDS:${PN} += "${VIRTUAL-RUNTIME_obmc-bmc-state-manager}"
+RDEPENDS:${PN} += "${VIRTUAL-RUNTIME_obmc-bmc-version}"
+RDEPENDS:${PN} += "${VIRTUAL-RUNTIME_obmc-bmc-updater}"
 
 inherit useradd
 
 USERADD_PACKAGES = "${PN}"
 # add ipmi group
-GROUPADD_PARAM_${PN} = "ipmi"
+GROUPADD_PARAM:${PN} = "ipmi"
 
-SYSTEMD_SERVICE_${PN} += "xyz.openbmc_project.Ipmi.Internal.SoftPowerOff.service phosphor-ipmi-host.service"
+SYSTEMD_SERVICE:${PN} += "xyz.openbmc_project.Ipmi.Internal.SoftPowerOff.service phosphor-ipmi-host.service"
 
-RRECOMMENDS_${PN} += "phosphor-settings-manager"
+RRECOMMENDS:${PN} += "phosphor-settings-manager"
 
 
 require ${BPN}.inc
@@ -73,14 +81,16 @@ WHITELIST_CONF = " \
         ${STAGING_DATADIR_NATIVE}/phosphor-ipmi-host/*.conf \
         ${S}/host-ipmid-whitelist.conf \
         "
-EXTRA_OECONF = " \
-        SENSOR_YAML_GEN=${STAGING_DIR_NATIVE}${sensor_datadir}/sensor.yaml \
-        INVSENSOR_YAML_GEN=${STAGING_DIR_NATIVE}${sensor_datadir}/invsensor.yaml \
-        FRU_YAML_GEN=${STAGING_DIR_NATIVE}${config_datadir}/fru_config.yaml \
+EXTRA_OEMESON = " \
+        -Dsensor-yaml-gen=${STAGING_DIR_NATIVE}${sensor_datadir}/sensor.yaml \
+        -Dinvsensor-yaml-gen=${STAGING_DIR_NATIVE}${sensor_datadir}/invsensor.yaml \
+        -Dfru-yaml-gen=${STAGING_DIR_NATIVE}${config_datadir}/fru_config.yaml \
         "
-EXTRA_OECONF_append = " \
-        WHITELIST_CONF="${WHITELIST_CONF}" \
+EXTRA_OEMESON:append = " \
+        -Dwhitelist-conf="${WHITELIST_CONF}" \
         "
+
+EXTRA_OEMESON:append = " -Dtests=disabled"
 
 S = "${WORKDIR}/git"
 
@@ -93,17 +103,18 @@ HOSTIPMI_PROVIDER_LIBRARY += "libusercmds.so"
 NETIPMI_PROVIDER_LIBRARY += "libipmi20.so"
 NETIPMI_PROVIDER_LIBRARY += "libusercmds.so"
 
-FILES_${PN}_append = " ${libdir}/host-ipmid/lib*${SOLIBS}"
-FILES_${PN}_append = " ${libdir}/ipmid-providers/lib*${SOLIBS}"
-FILES_${PN}_append = " ${libdir}/net-ipmid/lib*${SOLIBS}"
-FILES_${PN}-dev_append = " ${libdir}/ipmid-providers/lib*${SOLIBSDEV} ${libdir}/ipmid-providers/*.la"
+FILES:${PN}:append = " ${libdir}/host-ipmid/lib*${SOLIBS}"
+FILES:${PN}:append = " ${libdir}/ipmid-providers/lib*${SOLIBS}"
+FILES:${PN}:append = " ${libdir}/net-ipmid/lib*${SOLIBS}"
+FILES:${PN}:append = " ${systemd_system_unitdir}/phosphor-ipmi-host.service.d/*.conf"
+FILES:${PN}-dev:append = " ${libdir}/ipmid-providers/lib*${SOLIBSDEV} ${libdir}/ipmid-providers/*.la"
 
 # Soft Power Off
 # install the soft power off service in the host shutdown target
 SOFT_SVC = "xyz.openbmc_project.Ipmi.Internal.SoftPowerOff.service"
 SOFT_TGTFMT = "obmc-host-shutdown@{0}.target"
 SOFT_FMT = "../${SOFT_SVC}:${SOFT_TGTFMT}.requires/${SOFT_SVC}"
-SYSTEMD_LINK_${PN} += "${@compose_list_zip(d, 'SOFT_FMT', 'OBMC_HOST_INSTANCES')}"
+SYSTEMD_LINK:${PN} += "${@compose_list_zip(d, 'SOFT_FMT', 'OBMC_HOST_INSTANCES')}"
 
 #Collect all hardcoded sensor yamls from different recipes and
 #merge all of them with sensor.yaml.
@@ -136,3 +147,30 @@ python do_merge_sensors () {
 
 # python-pyyaml-native is installed by do_configure, so put this task after
 addtask merge_sensors after do_configure before do_compile
+
+IPMI_HOST_NEEDED_SERVICES = "\
+    mapper-wait@-xyz-openbmc_project-control-host{}-boot.service \
+    mapper-wait@-xyz-openbmc_project-control-host{}-boot-one_time.service \
+    mapper-wait@-xyz-openbmc_project-control-host{}-power_restore_policy.service \
+    mapper-wait@-xyz-openbmc_project-control-host{}-restriction_mode.service \
+    "
+
+do_install:append() {
+
+    # Create service override file.
+    override_dir=${D}${systemd_system_unitdir}/phosphor-ipmi-host.service.d
+    override_file=${override_dir}/10-override.conf
+    mkdir -p ${override_dir}
+    echo "[Unit]" > ${override_file}
+
+    # Insert host-instance based service dependencies.
+    for i in ${OBMC_HOST_INSTANCES};
+    do
+        for s in ${IPMI_HOST_NEEDED_SERVICES};
+        do
+            service=$(echo ${s} | sed "s/{}/${i}/g")
+            echo "Wants=${service}" >> ${override_file}
+            echo "After=${service}" >> ${override_file}
+        done
+    done
+}

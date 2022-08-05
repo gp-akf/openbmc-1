@@ -6,7 +6,7 @@ S = "${WORKDIR}/git"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
 
-inherit meson
+inherit pkgconfig meson
 inherit obmc-phosphor-utils
 inherit phosphor-dbus-yaml
 inherit python3native
@@ -17,8 +17,8 @@ DEPENDS += " \
         systemd \
         "
 
-SRC_URI = "git://github.com/openbmc/phosphor-dbus-interfaces"
-SRCREV = "39bdb4711855ed9caf18b55427691c80e8e8ac8e"
+SRC_URI = "git://github.com/openbmc/phosphor-dbus-interfaces;branch=master;protocol=https"
+SRCREV = "7a8b8d40bbb22c51aa25d9a8c9be94a364e54e42"
 
 # Process OBMC_ORG_YAML_SUBDIRS to create Meson config options.
 # ex. xyz/openbmc_project -> -Ddata_xyz_openbmc_project=true
@@ -28,11 +28,15 @@ def pdi_meson_config(d):
                 for x in listvar_to_list(d, 'OBMC_ORG_YAML_SUBDIRS')
         ])
 pdi_meson_config[vardeps] = "OBMC_ORG_YAML_SUBDIRS"
+EXTRA_OEMESON += "${@pdi_meson_config(d)}"
+
+# Remove all schemas by default regardless of the meson_options.txt config
+do_write_config:append() {
+    for intf in $(grep "^option('data_" ${S}/meson_options.txt | sed "s,^.*\(data_[^']*\).*$,\1,"); do
+        sed -i "/^\[built-in options\]\$/a$intf = false" ${WORKDIR}/meson.cross
+    done
+}
 
 # Markdown files are installed into /usr/share/phosphor-dbus-interfaces so
 # add them to the 'doc' subpackage.
-FILES_${PN}-doc += "${datadir}/${BPN}"
-
-EXTRA_OEMESON_append = " \
-        -Db_lto=true \
-        ${@pdi_meson_config(d)}"
+FILES:${PN}-doc += "${datadir}/${BPN}"

@@ -637,7 +637,7 @@ DESCRIPTION
     oe-core: directdisk.bbclass and mkefidisk.sh.  The difference
     between wic and those examples is that with wic the functionality
     of those scripts is implemented by a general-purpose partitioning
-    'language' based on Redhat kickstart syntax).
+    'language' based on Red Hat kickstart syntax).
 
     The initial motivation and design considerations that lead to the
     current tool are described exhaustively in Yocto Bug #3847
@@ -840,8 +840,8 @@ DESCRIPTION
     meanings. The commands are based on the Fedora kickstart
     documentation but with modifications to reflect wic capabilities.
 
-      http://fedoraproject.org/wiki/Anaconda/Kickstart#part_or_partition
-      http://fedoraproject.org/wiki/Anaconda/Kickstart#bootloader
+      https://pykickstart.readthedocs.io/en/latest/kickstart-docs.html#part-or-partition
+      https://pykickstart.readthedocs.io/en/latest/kickstart-docs.html#bootloader
 
   Commands
 
@@ -940,6 +940,12 @@ DESCRIPTION
                       quotes.  If not specified, the default string is
                       "defaults".
 
+         --fspassno: Specifies the order in which filesystem checks are done
+                     at boot time by fsck.  See fs_passno parameter of
+                     fstab(5).  This parameter will be copied into the
+                     /etc/fstab file of the installed system.  If not
+                     specified the default value of "0" will be used.
+
          --label label: Specifies the label to give to the filesystem
                         to be made on the partition. If the given
                         label is already in use by another filesystem,
@@ -990,6 +996,9 @@ DESCRIPTION
                              option is useful when we want to split a rootfs in
                              multiple partitions and we want to keep the right
                              permissions and usernames in all the partitions.
+
+         --no-fstab-update: This option is specific to wic. It does not update the
+                            '/etc/fstab' stock file for the given partition.
 
          --extra-space: This option is specific to wic. It adds extra
                         space after the space filled by the content

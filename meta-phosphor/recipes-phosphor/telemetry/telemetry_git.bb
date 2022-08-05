@@ -5,14 +5,14 @@ HOMEPAGE = "https://github.com/openbmc/telemetry"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://${S}/LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
 
-SRC_URI = "git://github.com/openbmc/telemetry"
+SRC_URI = "git://github.com/openbmc/telemetry;branch=master;protocol=https"
 
 PV = "1.0+git${SRCPV}"
-SRCREV = "4ab1d496d8a50d0466afb7f49668c40758bfe6a9"
+SRCREV = "39cc6ac99a135f1d7284520fbff613d7eb274f34"
 
 S = "${WORKDIR}/git"
 
-inherit meson
+inherit pkgconfig meson
 inherit systemd
 
 DEPENDS = "boost \
@@ -22,6 +22,6 @@ DEPENDS = "boost \
            sdbusplus \
            systemd"
 
-SYSTEMD_SERVICE_${PN} = "xyz.openbmc_project.Telemetry.service"
+SYSTEMD_SERVICE:${PN} = "xyz.openbmc_project.Telemetry.service"
 EXTRA_OEMESON = "-Dbuildtest=false"
 

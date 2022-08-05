@@ -233,7 +233,7 @@ shows common development flows you would use with the ``devtool add``
 command:
 
 .. image:: figures/sdk-devtool-add-flow.png
-   :align: center
+   :width: 100%
 
 1. *Generating the New Recipe*: The top part of the flow shows three
    scenarios by which you could use ``devtool add`` to generate a recipe
@@ -252,7 +252,7 @@ command:
    -  *Left*: The left scenario in the figure represents a common
       situation where the source code does not exist locally and needs
       to be extracted. In this situation, the source code is extracted
-      to the default workspace - you do not want the files in some
+      to the default workspace --- you do not want the files in some
       specific location outside of the workspace. Thus, everything you
       need will be located in the workspace::
 
@@ -267,7 +267,7 @@ command:
    -  *Middle*: The middle scenario in the figure also represents a
       situation where the source code does not exist locally. In this
       case, the code is again upstream and needs to be extracted to some
-      local area - this time outside of the default workspace.
+      local area --- this time outside of the default workspace.
 
       .. note::
 
@@ -302,7 +302,7 @@ command:
       recipe for the code and places the recipe into the workspace.
 
       Because the extracted source code already exists, ``devtool`` does
-      not try to relocate the source code into the workspace - only the
+      not try to relocate the source code into the workspace --- only the
       new recipe is placed in the workspace.
 
       Aside from a recipe folder, the command also creates an associated
@@ -315,7 +315,7 @@ command:
       $ devtool edit-recipe recipe
 
    From within the editor, you
-   can make modifications to the recipe that take affect when you build
+   can make modifications to the recipe that take effect when you build
    it later.
 
 3. *Build the Recipe or Rebuild the Image*: The next step you take
@@ -401,7 +401,7 @@ diagram shows common development flows for the ``devtool modify``
 command:
 
 .. image:: figures/sdk-devtool-modify-flow.png
-   :align: center
+   :width: 100%
 
 1. *Preparing to Modify the Code*: The top part of the flow shows three
    scenarios by which you could use ``devtool modify`` to prepare to
@@ -614,13 +614,13 @@ specify source code revision and versioning schemes, extract code into
 or out of the ``devtool``
 :ref:`devtool-the-workspace-layer-structure`,
 and work with any source file forms that the
-:ref:`fetchers <bitbake:bitbake-user-manual/bitbake-user-manual-fetching:fetchers>` support.
+:ref:`bitbake:bitbake-user-manual/bitbake-user-manual-fetching:fetchers` support.
 
 The following diagram shows the common development flow used with the
 ``devtool upgrade`` command:
 
 .. image:: figures/sdk-devtool-upgrade-flow.png
-   :align: center
+   :width: 100%
 
 1. *Initiate the Upgrade*: The top part of the flow shows the typical
    scenario by which you use the ``devtool upgrade`` command. The
@@ -838,7 +838,7 @@ recipe.
 If you need to add runtime dependencies, you can do so by adding the
 following to your recipe::
 
-   RDEPENDS_${PN} += "dependency1 dependency2 ..."
+   RDEPENDS:${PN} += "dependency1 dependency2 ..."
 
 .. note::
 
@@ -1154,7 +1154,7 @@ subdirectory for each package. Apart from some advanced cases, the
 splitting. The :term:`PACKAGES` variable lists all of the packages to be
 produced, while the :term:`FILES` variable specifies which files to include
 in each package by using an override to specify the package. For
-example, ``FILES_${PN}`` specifies the files to go into the main package
+example, ``FILES:${PN}`` specifies the files to go into the main package
 (i.e. the main package has the same name as the recipe and
 ``${``\ :term:`PN`\ ``}`` evaluates to the
 recipe name). The order of the :term:`PACKAGES` value is significant. For

@@ -1,12 +1,12 @@
 SUMMARY = "Lightweight secure web server"
 HOMEPAGE = "http://www.hiawatha-webserver.org"
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=751419260aa954499f7abaabaa882bbe"
 DEPENDS = "libxml2 libxslt virtual/crypt"
 
 SECTION = "net"
 
-SRC_URI = "http://hiawatha-webserver.org/files/${BP}.tar.gz \
+SRC_URI = "http://hiawatha-webserver.org/files/hiawatha-10/${BP}.tar.gz \
            file://hiawatha-init \
            file://hiawatha.service "
 
@@ -16,7 +16,7 @@ SRC_URI[sha256sum] = "61bf41146c51244769984135529fcffd0f6cb92be18dc12d460effc42f
 INITSCRIPT_NAME = "hiawatha"
 INITSCRIPT_PARAMS = "defaults 70"
 
-SYSTEMD_SERVICE_${PN} = "hiawatha.service"
+SYSTEMD_SERVICE:${PN} = "hiawatha.service"
 
 inherit cmake update-rc.d systemd
 
@@ -35,7 +35,7 @@ EXTRA_OECMAKE = " -DENABLE_IPV6=OFF \
                   -DCMAKE_INSTALL_LIBDIR=${libdir} \
                   -DCMAKE_INSTALL_FULL_LOCALSTATEDIR=${localstatedir}"
 
-do_install_append() {
+do_install:append() {
     # Copy over init script and sed in the correct sbin path
     sed -i 's,sed_sbin_path,${sbindir},' ${WORKDIR}/hiawatha-init
     mkdir -p ${D}${sysconfdir}/init.d
@@ -50,10 +50,26 @@ do_install_append() {
         install -m 644 ${WORKDIR}/hiawatha.service ${D}/${systemd_unitdir}/system
     fi
 
-    rmdir --ignore-fail-on-non-empty "${D}${localstatedir}" "${D}${localstatedir}/run"
+    # /var/log/hiawatha and /var/lib/hiawatha needs to be created in runtime.
+    # Use rmdir to catch if upstream stops creating these dirs, or adds
+    # something else in /var/log.
+    rmdir ${D}${localstatedir}/log/${BPN} ${D}${localstatedir}/log
+    rmdir ${D}${localstatedir}/run
+    rmdir --ignore-fail-on-non-empty ${D}${localstatedir}
+
+    # Create /var/log/hiawatha at runtime.
+    if [ "${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)}" ]; then
+        install -d ${D}${nonarch_libdir}/tmpfiles.d
+        echo "d ${localstatedir}/log/${BPN} - - - -" > ${D}${nonarch_libdir}/tmpfiles.d/${BPN}.conf
+    fi
+    if [ "${@bb.utils.filter('DISTRO_FEATURES', 'sysvinit', d)}" ]; then
+        install -d ${D}${sysconfdir}/default/volatiles
+        echo "d root root 0755 ${localstatedir}/log/${BPN} none" > ${D}${sysconfdir}/default/volatiles/99_${BPN}
+    fi
+
 }
 
-CONFFILES_${PN} = " \
+CONFFILES:${PN} = " \
     ${sysconfdir}/hiawatha/cgi-wrapper.conf \
     ${sysconfdir}/hiawatha/hiawatha.conf \
     ${sysconfdir}/hiawatha/index.xslt \
@@ -61,4 +77,5 @@ CONFFILES_${PN} = " \
     ${sysconfdir}/hiawatha/php-fcgi.conf \
 "
 
-FILES_${PN}-dev = "${libdir}/hiawatha/*${SOLIBSDEV}"
+FILES:${PN} += "${nonarch_libdir}/tmpfiles.d"
+FILES:${PN}-dev = "${libdir}/hiawatha/*${SOLIBSDEV}"

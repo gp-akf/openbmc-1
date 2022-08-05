@@ -2,7 +2,7 @@ SUMMARY = "Multimedia processing server for Linux"
 AUTHOR = "Wim Taymans <wtaymans@redhat.com>"
 HOMEPAGE = "https://pipewire.org"
 SECTION = "multimedia"
-LICENSE = "LGPL-2.1"
+LICENSE = "LGPL-2.1-only"
 LIC_FILES_CHKSUM = " \
     file://LICENSE;md5=d8153c6e65986f862a0550ca74a3ed73 \
     file://LGPL;md5=2d5025d4aa3495befef8f17206a5b0a1 \
@@ -11,7 +11,7 @@ DEPENDS = "alsa-lib dbus udev"
 SRCREV = "14c11c0fe4d366bad4cfecdee97b6652ff9ed63d"
 PV = "0.2.7"
 
-SRC_URI = "git://github.com/PipeWire/pipewire"
+SRC_URI = "git://github.com/PipeWire/pipewire;branch=master;protocol=https"
 
 S = "${WORKDIR}/git"
 
@@ -35,31 +35,31 @@ PACKAGES =+ "\
     lib${PN}-modules \
 "
 
-RDEPENDS_lib${PN} += "lib${PN}-modules ${PN}-spa-plugins"
+RDEPENDS:lib${PN} += "lib${PN}-modules ${PN}-spa-plugins"
 
-FILES_${PN} = "\
+FILES:${PN} = "\
     ${sysconfdir}/pipewire/pipewire.conf \
     ${bindir}/pipewire* \
     ${systemd_user_unitdir}/* \
 "
-FILES_lib${PN} = "\
+FILES:lib${PN} = "\
     ${libdir}/libpipewire-*.so.* \
 "
-FILES_lib${PN}-modules = "\
+FILES:lib${PN}-modules = "\
     ${libdir}/pipewire-*/* \
 "
-FILES_${PN}-spa-plugins = "\
+FILES:${PN}-spa-plugins = "\
     ${bindir}/spa-* \
     ${libdir}/spa/* \
 "
-FILES_${PN}-alsa = "\
+FILES:${PN}-alsa = "\
     ${libdir}/alsa-lib/* \
     ${datadir}/alsa/alsa.conf.d/50-pipewire.conf \
 "
-FILES_gstreamer1.0-${PN} = "\
+FILES:gstreamer1.0-${PN} = "\
     ${libdir}/gstreamer-1.0/* \
 "
 
-CONFFILES_${PN} = "\
+CONFFILES:${PN} = "\
     ${sysconfdir}/pipewire/pipewire.conf \
 "

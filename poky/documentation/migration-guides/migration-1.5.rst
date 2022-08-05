@@ -26,7 +26,7 @@ provide packages for these, you can install and use the Buildtools
 tarball, which provides an SDK-like environment containing them.
 
 For more information on this requirement, see the
-":ref:`ref-manual/system-requirements:required git, tar, python and gcc versions`"
+":ref:`ref-manual/system-requirements:required git, tar, python, make and gcc versions`"
 section.
 
 .. _migration-1.5-atom-pc-bsp:
@@ -87,22 +87,21 @@ The following changes have been made to the package QA checks:
    item not mentioned in :term:`ERROR_QA` or :term:`WARN_QA` would be treated as
    a warning. Consequently, several important items were not already in
    the default value of :term:`WARN_QA`. All of the possible QA checks are
-   now documented in the ":ref:`insane.bbclass <ref-classes-insane>`"
-   section.
+   now documented in the ":ref:`ref-classes-insane`" section.
 
 -  An additional QA check has been added to check if
    ``/usr/share/info/dir`` is being installed. Your recipe should delete
    this file within :ref:`ref-tasks-install` if "make
    install" is installing it.
 
--  If you are using the ``buildhistory`` class, the check for the package
+-  If you are using the :ref:`buildhistory <ref-classes-buildhistory>` class,
+   the check for the package
    version going backwards is now controlled using a standard QA check.
    Thus, if you have customized your :term:`ERROR_QA` or :term:`WARN_QA` values
    and still wish to have this check performed, you should add
    "version-going-backwards" to your value for one or the other
    variables depending on how you wish it to be handled. See the
-   documented QA checks in the
-   ":ref:`insane.bbclass <ref-classes-insane>`" section.
+   documented QA checks in the ":ref:`ref-classes-insane`" section.
 
 .. _migration-1.5-directory-layout-changes:
 
@@ -124,7 +123,7 @@ The following directory changes exist:
    need to refer to this directory. The ``runqemu`` script now uses this
    variable to find images and kernel binaries and will use BitBake to
    determine the directory. Alternatively, you can set the
-   ``DEPLOY_DIR_IMAGE`` variable in the external environment.
+   :term:`DEPLOY_DIR_IMAGE` variable in the external environment.
 
 -  When buildhistory is enabled, its output is now written under the
    :term:`Build Directory` rather than
@@ -144,7 +143,7 @@ Shortened Git ``SRCREV`` Values
 
 BitBake will now shorten revisions from Git repositories from the normal
 40 characters down to 10 characters within :term:`SRCPV`
-for improved usability in path and file names. This change should be
+for improved usability in path and filenames. This change should be
 safe within contexts where these revisions are used because the chances
 of spatially close collisions is very low. Distant collisions are not a
 major issue in the way the values are used.
@@ -221,8 +220,7 @@ recipes that previously inherited from this class, you should rename
 them from ``task-*`` to ``packagegroup-*`` and inherit packagegroup
 instead.
 
-For more information, see the
-":ref:`packagegroup.bbclass <ref-classes-packagegroup>`" section.
+For more information, see the ":ref:`ref-classes-packagegroup`" section.
 
 .. _migration-1.5-busybox:
 
@@ -242,7 +240,7 @@ Automated Image Testing
 -----------------------
 
 A new automated image testing framework has been added through the
-:ref:`testimage.bbclass <ref-classes-testimage*>` class. This
+:ref:`ref-classes-testimage*` classes. This
 framework replaces the older ``imagetest-qemu`` framework.
 
 You can learn more about performing automated image tests in the
@@ -333,7 +331,7 @@ Following is a list of short entries describing other changes:
    :term:`BAD_RECOMMENDATIONS` supports
    pre-renamed package names.
 
--  ``classes/rootfs_rpm``: Implement ``BAD_RECOMMENDATIONS`` for RPM.
+-  ``classes/rootfs_rpm``: Implement :term:`BAD_RECOMMENDATIONS` for RPM.
 
 -  ``systemd``: Remove ``systemd_unitdir`` if ``systemd`` is not in
    :term:`DISTRO_FEATURES`.
@@ -343,7 +341,7 @@ Following is a list of short entries describing other changes:
 
 -  ``libpam``: Deny all services for the ``OTHER`` entries.
 
--  ``image.bbclass``: Move ``runtime_mapping_rename`` to avoid conflict
+-  :ref:`ref-classes-image`: Move ``runtime_mapping_rename`` to avoid conflict
    with ``multilib``. See :yocto_bugs:`YOCTO #4993 </show_bug.cgi?id=4993>`
    in Bugzilla for more information.
 

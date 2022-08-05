@@ -47,7 +47,7 @@ The following recipes have been removed.
 -  ``core-image-lsb-sdk``: Part of removed LSB support.
 
 -  ``cve-check-tool``: Functionally replaced by the ``cve-update-db``
-   recipe and ``cve-check`` class.
+   recipe and :ref:`cve-check <ref-classes-cve-check>` class.
 
 -  ``eglinfo``: No longer maintained. ``eglinfo`` from ``mesa-demos`` is
    an adequate and maintained alternative.
@@ -142,17 +142,17 @@ CVE Checking
 ------------
 
 ``cve-check-tool`` has been functionally replaced by a new
-``cve-update-db`` recipe and functionality built into the ``cve-check``
+``cve-update-db`` recipe and functionality built into the :ref:`cve-check <ref-classes-cve-check>`
 class. The result uses NVD JSON data feeds rather than the deprecated
 XML feeds that ``cve-check-tool`` was using, supports CVSSv3 scoring,
 and makes other improvements.
 
 Additionally, the ``CVE_CHECK_CVE_WHITELIST`` variable has been replaced
-by ``CVE_CHECK_WHITELIST``.
+by ``CVE_CHECK_WHITELIST`` (replaced by :term:`CVE_CHECK_IGNORE` in version 3.5).
 
 .. _migration-3.0-bitbake-changes:
 
-Bitbake Changes
+BitBake Changes
 ---------------
 
 The following BitBake changes have occurred.
@@ -194,7 +194,7 @@ The following BitBake changes have occurred.
    scripts that handles these two events need to be updated.
 
 -  The arguments passed to functions used with
-   :term:`bitbake:BB_HASHCHECK_FUNCTION`
+   :term:`BB_HASHCHECK_FUNCTION`
    have changed. If you are using your own custom hash check function,
    see :yocto_git:`/poky/commit/?id=40a5e193c4ba45c928fccd899415ea56b5417725`
    for details.
@@ -216,11 +216,11 @@ The following sanity check changes occurred.
 -  :term:`SRC_URI` is now checked for usage of two
    problematic items:
 
-   -  "${PN}" prefix/suffix use - Warnings always appear if ${PN} is
+   -  "${PN}" prefix/suffix use --- warnings always appear if ${PN} is
       used. You must fix the issue regardless of whether multiconfig or
       anything else that would cause prefixing/suffixing to happen.
 
-   -  Github archive tarballs - these are not guaranteed to be stable.
+   -  Github archive tarballs --- these are not guaranteed to be stable.
       Consequently, it is likely that the tarballs will be refreshed and
       thus the SRC_URI checksums will fail to apply. It is recommended
       that you fetch either an official release tarball or a specific
@@ -243,7 +243,7 @@ The following sanity check changes occurred.
 -  Setting ``DEPENDS_${PN}`` anywhere (i.e. typically in a recipe) now
    triggers an error. The error is triggered because
    :term:`DEPENDS` is not a package-specific variable
-   unlike RDEPENDS. You should set ``DEPENDS`` instead.
+   unlike RDEPENDS. You should set :term:`DEPENDS` instead.
 
 -  systemd currently does not work well with the musl C library because
    only upstream officially supports linking the library with glibc.

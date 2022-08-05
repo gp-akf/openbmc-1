@@ -1,6 +1,6 @@
 DESCRIPTION = "CUnit is a C framework for unit testing. Test output supports comandline and GUI results reporting"
 HOMEPAGE = "http://cunit.sourceforge.net"
-LICENSE = "LGPL-2.0"
+LICENSE = "LGPL-2.0-only"
 SECTION = "libs"
 LIC_FILES_CHKSUM = "file://COPYING;md5=7734aa853b85d6f935466f081490ddbb"
 
@@ -31,7 +31,7 @@ do_install_ptest() {
 	install -m 0755 ${S}${TESTBIN} ${D}${PTEST_PATH}/tests/
 }
 
-FILES_${PN}-dev += "${datadir}/CUnit"
-FILES_${PN}-doc += "${docdir}"
+FILES:${PN}-dev += "${datadir}/CUnit"
+FILES:${PN}-doc += "${docdir}"
 
 BBCLASSEXTEND = "native"

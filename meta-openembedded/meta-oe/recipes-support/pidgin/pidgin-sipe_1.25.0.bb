@@ -1,6 +1,6 @@
 SUMMARY = "Protocol plugin for Office 365/Lync/OCS for Adium, Pidgin, Miranda and Telepathy IM Framework"
 SECTION = "webos/services"
-LICENSE = "GPLv2.0"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=751419260aa954499f7abaabaa882bbe"
 
 DEPENDS = "pidgin gmime intltool-native glib-2.0-native"
@@ -26,11 +26,11 @@ PACKAGECONFIG[telepathy] = "--enable-telepathy=yes,--enable-telepathy=no,telepat
 #PACKAGECONFIG[gssapi_only] = "--enable-gssapi-only=yes,--enable-gssapi-only=no,krb5"
 PACKAGECONFIG[debug] = "--enable-debug=yes,--enable-debug=no,valgrind"
 
-FILES_${PN}-dev += " \
+FILES:${PN}-dev += " \
     ${libdir}/purple-2/*.la \
 "
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${libdir}/purple-2/libsipe.so \
     ${datadir}/appdata \
     ${datadir}/metainfo \

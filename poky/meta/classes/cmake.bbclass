@@ -1,7 +1,7 @@
 # Path to the CMake file to process.
 OECMAKE_SOURCEPATH ??= "${S}"
 
-DEPENDS_prepend = "cmake-native "
+DEPENDS:prepend = "cmake-native "
 B = "${WORKDIR}/build"
 
 # What CMake generator to use.
@@ -31,8 +31,6 @@ OECMAKE_C_FLAGS_RELEASE ?= "-DNDEBUG"
 OECMAKE_CXX_FLAGS_RELEASE ?= "-DNDEBUG"
 OECMAKE_C_LINK_FLAGS ?= "${HOST_CC_ARCH} ${TOOLCHAIN_OPTIONS} ${CPPFLAGS} ${LDFLAGS}"
 OECMAKE_CXX_LINK_FLAGS ?= "${HOST_CC_ARCH} ${TOOLCHAIN_OPTIONS} ${CXXFLAGS} ${LDFLAGS}"
-CXXFLAGS += "${HOST_CC_ARCH} ${TOOLCHAIN_OPTIONS}"
-CFLAGS += "${HOST_CC_ARCH} ${TOOLCHAIN_OPTIONS}"
 
 def oecmake_map_compiler(compiler, d):
     args = d.getVar(compiler).split()
@@ -57,13 +55,13 @@ OECMAKE_PERLNATIVE_DIR ??= ""
 OECMAKE_EXTRA_ROOT_PATH ?= ""
 
 OECMAKE_FIND_ROOT_PATH_MODE_PROGRAM = "ONLY"
-OECMAKE_FIND_ROOT_PATH_MODE_PROGRAM_class-native = "BOTH"
+OECMAKE_FIND_ROOT_PATH_MODE_PROGRAM:class-native = "BOTH"
 
-EXTRA_OECMAKE_append = " ${PACKAGECONFIG_CONFARGS}"
+EXTRA_OECMAKE:append = " ${PACKAGECONFIG_CONFARGS}"
 
 export CMAKE_BUILD_PARALLEL_LEVEL
-CMAKE_BUILD_PARALLEL_LEVEL_task-compile = "${@oe.utils.parallel_make(d, False)}"
-CMAKE_BUILD_PARALLEL_LEVEL_task-install = "${@oe.utils.parallel_make(d, True)}"
+CMAKE_BUILD_PARALLEL_LEVEL:task-compile = "${@oe.utils.parallel_make(d, False)}"
+CMAKE_BUILD_PARALLEL_LEVEL:task-install = "${@oe.utils.parallel_make(d, True)}"
 
 OECMAKE_TARGET_COMPILE ?= "all"
 OECMAKE_TARGET_INSTALL ?= "install"
@@ -189,6 +187,7 @@ cmake_do_configure() {
 	  -DCMAKE_TOOLCHAIN_FILE=${WORKDIR}/toolchain.cmake \
 	  -DCMAKE_NO_SYSTEM_FROM_IMPORTED=1 \
 	  -DCMAKE_EXPORT_NO_PACKAGE_REGISTRY=ON \
+	  -DFETCHCONTENT_FULLY_DISCONNECTED=ON \
 	  ${EXTRA_OECMAKE} \
 	  -Wno-dev
 }

@@ -1,7 +1,7 @@
 SUMMARY = "Tools for performance analysis"
 HOMEPAGE = "http://lmbench.sourceforge.net/"
 SECTION = "console/utils"
-LICENSE = "GPLv2 & GPL-2.0-with-lmbench-restriction"
+LICENSE = "GPL-2.0-only & GPL-2.0-with-lmbench-restriction"
 LIC_FILES_CHKSUM = "file://COPYING;md5=8ca43cbc842c2336e835926c2166c28b \
                     file://COPYING-2;md5=8e9aee2ccc75d61d107e43794a25cdf9"
 
@@ -83,7 +83,7 @@ do_install () {
     install -m 0644 ${S}/src/webpage-lm.tar ${D}${datadir}/lmbench
 }
 
-pkg_postinst_${PN} () {
+pkg_postinst:${PN} () {
     if [ -z "$D" ]; then
         if command -v systemd-tmpfiles >/dev/null; then
             systemd-tmpfiles --create ${sysconfdir}/tmpfiles.d/lmbench.conf
@@ -93,9 +93,9 @@ pkg_postinst_${PN} () {
     fi
 }
 
-RDEPENDS_${PN} = "perl"
-FILES_${PN} += "${datadir}/lmbench"
+RDEPENDS:${PN} = "perl"
+FILES:${PN} += "${datadir}/lmbench"
 
-ALTERNATIVE_${PN} = "stream"
+ALTERNATIVE:${PN} = "stream"
 ALTERNATIVE_LINK_NAME[stream] = "${bindir}/stream"
 

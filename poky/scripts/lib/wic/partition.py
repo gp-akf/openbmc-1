@@ -33,6 +33,7 @@ class Partition():
         self.include_path = args.include_path
         self.change_directory = args.change_directory
         self.fsopts = args.fsopts
+        self.fspassno = args.fspassno
         self.fstype = args.fstype
         self.label = args.label
         self.use_label = args.use_label
@@ -54,6 +55,7 @@ class Partition():
         self.uuid = args.uuid
         self.fsuuid = args.fsuuid
         self.type = args.type
+        self.no_fstab_update = args.no_fstab_update
         self.updated_fstab_path = None
         self.has_fstab = False
         self.update_fstab_in_rootfs = False
@@ -104,7 +106,7 @@ class Partition():
                 extra_blocks = self.extra_space
 
             rootfs_size = actual_rootfs_size + extra_blocks
-            rootfs_size *= self.overhead_factor
+            rootfs_size = int(rootfs_size * self.overhead_factor)
 
             logger.debug("Added %d extra blocks to %s to get to %d total blocks",
                          extra_blocks, self.mountpoint, rootfs_size)
@@ -170,7 +172,7 @@ class Partition():
             # Split sourceparams string of the form key1=val1[,key2=val2,...]
             # into a dict.  Also accepts valueless keys i.e. without =
             splitted = self.sourceparams.split(',')
-            srcparams_dict = dict(par.split('=', 1) for par in splitted if par)
+            srcparams_dict = dict((par.split('=', 1) + [None])[:2] for par in splitted if par)
 
         plugin = PluginMgr.get_plugins('source')[self.source]
         plugin.do_configure_partition(self, srcparams_dict, creator,
@@ -286,7 +288,7 @@ class Partition():
             (self.fstype, extraopts, rootfs, label_str, self.fsuuid, rootfs_dir)
         exec_native_cmd(mkfs_cmd, native_sysroot, pseudo=pseudo)
 
-        if self.updated_fstab_path and self.has_fstab:
+        if self.updated_fstab_path and self.has_fstab and not self.no_fstab_update:
             debugfs_script_path = os.path.join(cr_workdir, "debugfs_script")
             with open(debugfs_script_path, "w") as f:
                 f.write("cd etc\n")
@@ -350,7 +352,7 @@ class Partition():
         mcopy_cmd = "mcopy -i %s -s %s/* ::/" % (rootfs, rootfs_dir)
         exec_native_cmd(mcopy_cmd, native_sysroot)
 
-        if self.updated_fstab_path and self.has_fstab:
+        if self.updated_fstab_path and self.has_fstab and not self.no_fstab_update:
             mcopy_cmd = "mcopy -i %s %s ::/etc/fstab" % (rootfs, self.updated_fstab_path)
             exec_native_cmd(mcopy_cmd, native_sysroot)
 

@@ -14,8 +14,8 @@ inherit phosphor-dbus-yaml
 DEPENDS += "autoconf-archive-native"
 DEPENDS += "${PYTHON_PN}-sdbus++-native"
 
-SRC_URI = "git://github.com/openbmc/intel-dbus-interfaces"
-SRCREV = "b5f2dd444c5d3808d005452417e4ae2ea28624ff"
+SRC_URI = "git://github.com/openbmc/intel-dbus-interfaces;branch=master;protocol=https"
+SRCREV = "2b1255c47fdaaee6fd2db8f38f32abc13a7edf05"
 
 PACKAGECONFIG ??= "libintel_dbus"
 PACKAGECONFIG[libintel_dbus] = " \
@@ -25,7 +25,7 @@ PACKAGECONFIG[libintel_dbus] = " \
         libsystemd \
         "
 
-PACKAGECONFIG_remove_class-native = "libintel_dbus"
-PACKAGECONFIG_remove_class-nativesdk = "libintel_dbus"
+PACKAGECONFIG:remove:class-native = "libintel_dbus"
+PACKAGECONFIG:remove:class-nativesdk = "libintel_dbus"
 
 BBCLASSEXTEND += "native nativesdk"

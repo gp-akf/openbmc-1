@@ -1,7 +1,7 @@
 DESCRIPTION = "Libwhisker is a Perl module geared specificly for HTTP testing."
 
 SECTION = "libs"
-LICENSE = "Artistic-1.0 | GPL-1.0+"
+LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
 
 LIC_FILES_CHKSUM = "file://LICENSE;md5=254b8e29606fce6d1c1a4c9e32354573"
 
@@ -24,6 +24,6 @@ do_install() {
     oe_runmake install DESTDIR=${D} INSTALLDIR=${PERLLIBDIRS}/vendor_perl/${PERLVERSION} MANDIR=${datadir}/perl/${PERLVERSION}
 }
 
-FILES_${PN} += "${datadir}/perl"
+FILES:${PN} += "${datadir}/perl"
 
 BBCLASSEXTEND = "native"

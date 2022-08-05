@@ -15,8 +15,8 @@ DEPENDS += "phosphor-logging"
 DEPENDS += "nlohmann-json"
 DEPENDS += "exprtk"
 
-SRC_URI = "git://github.com/openbmc/phosphor-virtual-sensor.git;protocol=git"
-SRCREV = "4ac7a7f28e7469f0b2e9be096c31294334a6cd1a"
+SRC_URI = "git://github.com/openbmc/phosphor-virtual-sensor.git;protocol=https;branch=master"
+SRCREV = "26959667e5a6b0f825cf2dd57c465bc246a9dceb"
 S = "${WORKDIR}/git"
 
-SYSTEMD_SERVICE_${PN} = "phosphor-virtual-sensor.service"
+SYSTEMD_SERVICE:${PN} = "phosphor-virtual-sensor.service"

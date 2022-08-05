@@ -11,7 +11,7 @@ SECTION = "libs"
 
 inherit autotools
 
-DEPENDS_append_libc-musl = " libucontext"
+DEPENDS:append:libc-musl = " libucontext"
 
 BBCLASSEXTEND = "native"
 
@@ -28,11 +28,11 @@ SRCREV_protobuf = "cb6dd4ef5f82e41e06179dcd57d3b1d9246ad6ac"
 SRCREV_lss = "fd00dbbd0c06a309c657d89e9430143b179ff6db"
 SRCREV_gyp = "324dd166b7c0b39d513026fa52d6280ac6d56770"
 
-SRC_URI = "git://github.com/google/breakpad;name=breakpad;branch=main \
-           git://github.com/google/googletest.git;destsuffix=git/src/testing/gtest;name=gtest \
-           git://github.com/protocolbuffers/protobuf.git;destsuffix=git/src/third_party/protobuf/protobuf;name=protobuf \
+SRC_URI = "git://github.com/google/breakpad;name=breakpad;branch=main;protocol=https \
+           git://github.com/google/googletest.git;destsuffix=git/src/testing/gtest;name=gtest;branch=main;protocol=https \
+           git://github.com/protocolbuffers/protobuf.git;destsuffix=git/src/third_party/protobuf/protobuf;name=protobuf;branch=master;protocol=https \
            git://chromium.googlesource.com/linux-syscall-support;protocol=https;branch=main;destsuffix=git/src/third_party/lss;name=lss \
-           git://chromium.googlesource.com/external/gyp;protocol=https;destsuffix=git/src/tools/gyp;name=gyp \
+           git://chromium.googlesource.com/external/gyp;protocol=https;destsuffix=git/src/tools/gyp;name=gyp;branch=master \
            file://0001-include-sys-reg.h-to-get-__WORDSIZE-on-musl-libc.patch \
            file://0003-Fix-conflict-between-musl-libc-dirent.h-and-lss.patch \
            file://0001-Turn-off-sign-compare-for-musl-libc.patch \
@@ -48,15 +48,15 @@ SRC_URI = "git://github.com/google/breakpad;name=breakpad;branch=main \
 S = "${WORKDIR}/git"
 
 CXXFLAGS += "-D_GNU_SOURCE"
-LDFLAGS_append_libc-musl = " -lucontext"
+LDFLAGS:append:libc-musl = " -lucontext"
 
-COMPATIBLE_HOST_powerpc = "null"
-COMPATIBLE_HOST_powerpc64 = "null"
-COMPATIBLE_HOST_powerpc64le = "null"
-COMPATIBLE_HOST_riscv64 = "null"
-COMPATIBLE_HOST_riscv32 = "null"
+COMPATIBLE_HOST:powerpc = "null"
+COMPATIBLE_HOST:powerpc64 = "null"
+COMPATIBLE_HOST:powerpc64le = "null"
+COMPATIBLE_HOST:riscv64 = "null"
+COMPATIBLE_HOST:riscv32 = "null"
 
-do_install_append() {
+do_install:append() {
         install -d ${D}${includedir}
         install -d ${D}${includedir}/breakpad
 
@@ -104,8 +104,8 @@ do_install_append() {
 
 PACKAGES =+ "${PN}-minidump-upload ${PN}-sym-upload"
 
-FILES_${PN}-minidump-upload = "${bindir}/minidump_upload"
-FILES_${PN}-sym-upload = "${bindir}/sym_upload"
+FILES:${PN}-minidump-upload = "${bindir}/minidump_upload"
+FILES:${PN}-sym-upload = "${bindir}/sym_upload"
 
 
 SYSROOT_PREPROCESS_FUNCS += "breakpad_populate_sysroot"
@@ -125,7 +125,7 @@ breakpad_populate_sysroot() {
 #| {standard input}:2184: Error: Thumb does not support this addressing mode -- `str r6,[r1,#-4]!'
 #| {standard input}:2191: Error: lo register required -- `ldr pc,[sp]'
 #| make: *** [src/client/linux/handler/exception_handler.o] Error 1
-ARM_INSTRUCTION_SET_armv5 = "arm"
-ARM_INSTRUCTION_SET_armv4 = "arm"
+ARM_INSTRUCTION_SET:armv5 = "arm"
+ARM_INSTRUCTION_SET:armv4 = "arm"
 
 TOOLCHAIN = "gcc"

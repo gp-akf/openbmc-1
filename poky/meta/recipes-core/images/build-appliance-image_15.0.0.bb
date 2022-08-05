@@ -24,8 +24,8 @@ IMAGE_FSTYPES = "wic.vmdk wic.vhd wic.vhdx"
 
 inherit core-image setuptools3
 
-SRCREV ?= "b44849c32c87fbb8c5a465ecc29a6182e6781d78"
-SRC_URI = "git://git.yoctoproject.org/poky \
+SRCREV ?= "0674ae7bc46ebfa90c55bbedec6b22dc5f48dacf"
+SRC_URI = "git://git.yoctoproject.org/poky;branch=master \
            file://Yocto_Build_Appliance.vmx \
            file://Yocto_Build_Appliance.vmxf \
            file://README_VirtualBox_Guest_Additions.txt \
@@ -34,7 +34,7 @@ SRC_URI = "git://git.yoctoproject.org/poky \
 RECIPE_NO_UPDATE_REASON = "Recipe is recursive and handled as part of the release process"
 BA_INCLUDE_SOURCES ??= "0"
 
-IMAGE_CMD_ext4_append () {
+IMAGE_CMD:ext4:append () {
 	# We don't need to reserve much space for root, 0.5% is more than enough
 	tune2fs -m 0.5 ${IMGDEPLOYDIR}/${IMAGE_NAME}.rootfs.ext4
 }
@@ -87,7 +87,7 @@ fakeroot do_populate_poky_src () {
 
 	# Load tap/tun at startup
 	rm -f ${IMAGE_ROOTFS}/sbin/iptables
-	lnr ${IMAGE_ROOTFS}/usr/sbin/iptables ${IMAGE_ROOTFS}/sbin/iptables
+	ln -rs ${IMAGE_ROOTFS}/usr/sbin/iptables ${IMAGE_ROOTFS}/sbin/iptables
 	echo "tun" >> ${IMAGE_ROOTFS}/etc/modules
 
 	# Use Clearlooks GTK+ theme
@@ -109,6 +109,8 @@ fakeroot do_populate_poky_src () {
 }
 
 IMAGE_PREPROCESS_COMMAND += "do_populate_poky_src; "
+# For pip usage above
+do_image[network] = "1"
 
 addtask rootfs after do_unpack
 

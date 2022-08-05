@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-[ -z "${gbmc_ncsi_nft_lib-}" ] || return
+[ -n "${gbmc_ncsi_nft_lib-}" ] && return
+
+source /usr/share/network/lib.sh || exit
 
 gbmc_ncsi_nft_init=
 gbmc_ncsi_nft_lastip4=
@@ -36,43 +38,17 @@ gbmc_ncsi_nft_update() {
 
   local ip6="$gbmc_ncsi_nft_lastip6"
   if [ -n "$ip6" ]; then
-    contents+="        ip6 daddr $ip6/128 goto ncsi_legacy_input"$'\n'
-
-    local ip_bytes=()
-    ip_to_bytes ip_bytes "$ip6"
-    # If our address has enough spare bits for appending the BMC suffix
-    # then we add a rule that allows the BMC subnet. That is, we need a /64
-    # as input.
-    local i
-    for (( i = 8; i < 16; i++ )); do
-      if (( ip_bytes[$i] != 0 )); then
-        ip_bytes=()
-        break
-      fi
-    done
-    if (( ${#ip_bytes[@]} != 0 )); then
-      ip_bytes[8]=0xfd
-      local pfx="$(ip_bytes_to_str ip_bytes)"
-      contents+="        ip6 saddr != $pfx/72 ip6 daddr"
-      contents+=" $pfx/72 goto ncsi_gbmc_br_pub_input"$'\n'
-    fi
+    contents+="        ip6 daddr $ip6 goto ncsi_legacy_input"$'\n'
   fi
 
-  contents+='    }'$'\n'
-  contents+='    chain ncsi_forward {'$'\n'
-  if [ -n "$pfx" ]; then
-    contents+="        ip6 saddr != $pfx/72 ip6 daddr $pfx/72 accept"$'\n'
-  fi
   contents+='    }'$'\n'
   contents+='}'$'\n'
 
-  local rfile=/run/nftables/40-gbmc-ncsi-in.rules
+  local rfile=/run/nftables/30-gbmc-ncsi-in.rules
   mkdir -p -m 755 "$(dirname "$rfile")"
   printf '%s' "$contents" >"$rfile"
 
-  echo 'Restarting nftables' >&2
-  systemctl reset-failed nftables
-  systemctl --no-block restart nftables
+  systemctl reset-failed nftables && systemctl --no-block reload-or-restart nftables || true
 }
 
 gbmc_ncsi_nft_hook() {
@@ -82,6 +58,14 @@ gbmc_ncsi_nft_hook() {
   elif [ "$change" = 'addr' -a "$intf" = '@NCSI_IF@' -a "$scope" = 'global' ]; then
     if [ "$fam" = 'inet6' ]; then
       local -n lastip='gbmc_ncsi_nft_lastip6'
+      local pfx_bytes=()
+      ip_to_bytes pfx_bytes "$ip" || return
+      # We only want to allow a <pfx>:: address
+      for (( i = 8; i < 16; ++i )); do
+        if (( pfx_bytes[i] != 0 )); then
+          return
+        fi
+      done
     else
       local -n lastip='gbmc_ncsi_nft_lastip4'
     fi

@@ -3,7 +3,7 @@ DESCRIPTION = "LibFM provides file management functions built on top of Glib/GIO
 giving a convenient higher-level API."
 HOMEPAGE = "http://pcmanfm.sourceforge.net/"
 
-LICENSE = "GPLv2+ & LGPLv2+"
+LICENSE = "GPL-2.0-or-later & LGPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://COPYING;md5=4641e94ec96f98fabc56ff9cc48be14b \
                     file://src/fm.h;beginline=8;endline=21;md5=ef1f84da64b3c01cca447212f7ef6007 \
                     file://src/base/fm-config.h;beginline=10;endline=23;md5=ef1f84da64b3c01cca447212f7ef6007 \
@@ -29,7 +29,7 @@ do_configure[dirs] =+ "${S}/m4"
 
 PACKAGES =+ "libfm-gtk"
 PACKAGES += "${PN}-mime"
-FILES_libfm-gtk = " \
+FILES:libfm-gtk = " \
     ${libdir}/libfm-gtk*so.* \
     ${libdir}/libfm/modules/gtk* \
     ${bindir}/libfm-pref-apps \
@@ -40,9 +40,9 @@ FILES_libfm-gtk = " \
     ${datadir}/libfm/images/unknown.png \
     ${datadir}/libfm/ui/*.ui \
 "
-FILES_${PN}-mime = "${datadir}/mime/"
+FILES:${PN}-mime = "${datadir}/mime/"
 
-do_install_append () {
+do_install:append () {
     # remove files which are part of libfm-extra
     rm -f ${D}${includedir}/libfm-1.0/fm-xml-file.h
     rm -f ${D}${includedir}/libfm-1.0/fm-version.h

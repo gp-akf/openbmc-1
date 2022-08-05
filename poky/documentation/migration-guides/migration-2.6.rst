@@ -118,8 +118,7 @@ For names of recipes removed because of this repository change, see the
 ---------------------------------------------------------------------------------------------------
 
 Previously, it was possible for Python recipes that inherited the
-``distutils`` and
-:ref:`distutils3 <ref-classes-distutils3>` classes to fetch code
+``distutils`` and ``distutils3`` classes to fetch code
 during the :ref:`ref-tasks-configure` task to satisfy
 dependencies mentioned in ``setup.py`` if those dependencies were not
 provided in the sysroot (i.e. recipes providing the dependencies were
@@ -363,7 +362,7 @@ Post Installation Changes
 
 You must explicitly mark post installs to defer to the target. If you
 want to explicitly defer a postinstall to first boot on the target
-rather than at rootfs creation time, use ``pkg_postinst_ontarget()`` or
+rather than at root filesystem creation time, use ``pkg_postinst_ontarget()`` or
 call ``postinst_intercept delay_to_first_boot`` from ``pkg_postinst()``.
 Any failure of a ``pkg_postinst()`` script (including exit 1) triggers
 an error during the :ref:`ref-tasks-rootfs` task.
@@ -430,7 +429,7 @@ The following miscellaneous changes occurred:
    .. note::
 
       ``genericx86`` and ``genericx86-64`` retain ``kernel-modules`` as part of
-      the ``RRECOMMENDS`` variable setting.
+      the :term:`RRECOMMENDS` variable setting.
 
 -  The ``LGPLv2_WHITELIST_GPL-3.0`` variable has been removed. If you
    are setting this variable in your configuration, set or append it to

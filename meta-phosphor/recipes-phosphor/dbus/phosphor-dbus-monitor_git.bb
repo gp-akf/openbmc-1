@@ -6,10 +6,10 @@ PV = "1.0+git${SRCPV}"
 HOMEPAGE = "http://github.com/openbmc/phosphor-dbus-monitor"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
-SRC_URI = "git://github.com/openbmc/phosphor-dbus-monitor"
-SRCREV = "995060c14f7c017db6ebf3a33d622ff0858b6ba2"
+SRC_URI = "git://github.com/openbmc/phosphor-dbus-monitor;branch=master;protocol=https"
+SRCREV = "413a4857157f0c34bbfcc0cfee5db6756e2f3b91"
 
-inherit autotools \
+inherit meson \
         pkgconfig \
         python3native \
         phosphor-dbus-monitor \
@@ -17,12 +17,11 @@ inherit autotools \
 
 PACKAGE_BEFORE_PN = "phosphor-msl-verify"
 SYSTEMD_PACKAGES = "${PN} phosphor-msl-verify"
-SYSTEMD_SERVICE_phosphor-msl-verify = "phosphor-msl-verify.service"
+SYSTEMD_SERVICE:phosphor-msl-verify = "phosphor-msl-verify.service"
 
 DEPENDS += " \
         ${PN}-config \
         phosphor-logging \
-        autoconf-archive-native \
         ${PYTHON_PN}-sdbus++-native \
         sdeventplus \
         gtest \
@@ -33,10 +32,10 @@ DEPENDS += " \
         ${PYTHON_PN}-mako-native \
         "
 
-FILES_phosphor-msl-verify = "${bindir}/phosphor-msl-verify"
+FILES:phosphor-msl-verify = "${bindir}/phosphor-msl-verify"
 
 S = "${WORKDIR}/git"
 
-EXTRA_OECONF = " \
-        YAML_PATH=${STAGING_DIR_HOST}${config_dir} \
+EXTRA_OEMESON = " \
+        -DYAML_PATH=${STAGING_DIR_HOST}${config_dir} \
         "

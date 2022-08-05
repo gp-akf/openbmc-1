@@ -99,7 +99,7 @@ discussion mailing list about the BitBake build tool.
 
    This example was inspired by and drew heavily from
    `Mailing List post - The BitBake equivalent of "Hello, World!"
-   <http://www.mail-archive.com/yocto@yoctoproject.org/msg09379.html>`_.
+   <https://www.mail-archive.com/yocto@yoctoproject.org/msg09379.html>`_.
 
 As stated earlier, the goal of this example is to eventually compile
 "Hello World". However, it is unknown what BitBake needs and what you
@@ -145,23 +145,23 @@ Following is the complete "Hello World" example.
 
     The majority of this output is specific to environment variables that
     are not directly relevant to BitBake. However, the very first
-    message regarding the ``BBPATH`` variable and the
+    message regarding the :term:`BBPATH` variable and the
     ``conf/bblayers.conf`` file is relevant.
 
     When you run BitBake, it begins looking for metadata files. The
     :term:`BBPATH` variable is what tells BitBake where
-    to look for those files. ``BBPATH`` is not set and you need to set
-    it. Without ``BBPATH``, BitBake cannot find any configuration files
+    to look for those files. :term:`BBPATH` is not set and you need to set
+    it. Without :term:`BBPATH`, BitBake cannot find any configuration files
     (``.conf``) or recipe files (``.bb``) at all. BitBake also cannot
     find the ``bitbake.conf`` file.
 
-#.  **Setting BBPATH:** For this example, you can set ``BBPATH`` in
+#.  **Setting BBPATH:** For this example, you can set :term:`BBPATH` in
     the same manner that you set ``PATH`` earlier in the appendix. You
     should realize, though, that it is much more flexible to set the
-    ``BBPATH`` variable up in a configuration file for each project.
+    :term:`BBPATH` variable up in a configuration file for each project.
 
     From your shell, enter the following commands to set and export the
-    ``BBPATH`` variable::
+    :term:`BBPATH` variable::
 
       $ BBPATH="projectdirectory"
       $ export BBPATH
@@ -175,7 +175,7 @@ Following is the complete "Hello World" example.
        ("~") character as BitBake does not expand that character as the
        shell would.
 
-#.  **Run BitBake:** Now that you have ``BBPATH`` defined, run the
+#.  **Run BitBake:** Now that you have :term:`BBPATH` defined, run the
     ``bitbake`` command again::
 
        $ bitbake
@@ -205,7 +205,7 @@ Following is the complete "Hello World" example.
     recipe files. For this example, you need to create the file in your
     project directory and define some key BitBake variables. For more
     information on the ``bitbake.conf`` file, see
-    http://git.openembedded.org/bitbake/tree/conf/bitbake.conf.
+    https://git.openembedded.org/bitbake/tree/conf/bitbake.conf.
 
     Use the following commands to create the ``conf`` directory in the
     project directory::
@@ -216,7 +216,7 @@ Following is the complete "Hello World" example.
     use some editor to create the ``bitbake.conf`` so that it contains
     the following::
 
-       PN  = "${@bb.parse.BBHandler.vars_from_file(d.getVar('FILE', False),d)[0] or 'defaultpkgname'}"
+       PN  = "${@bb.parse.vars_from_file(d.getVar('FILE', False),d)[0] or 'defaultpkgname'}"
 
        TMPDIR  = "${TOPDIR}/tmp"
        CACHE   = "${TMPDIR}/cache"

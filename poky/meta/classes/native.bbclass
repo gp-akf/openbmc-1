@@ -9,7 +9,7 @@ PACKAGE_ARCH = "${BUILD_ARCH}"
 
 # used by cmake class
 OECMAKE_RPATH = "${libdir}"
-OECMAKE_RPATH_class-native = "${libdir}"
+OECMAKE_RPATH:class-native = "${libdir}"
 
 TARGET_ARCH = "${BUILD_ARCH}"
 TARGET_OS = "${BUILD_OS}"
@@ -106,7 +106,7 @@ CLASSOVERRIDE = "class-native"
 MACHINEOVERRIDES = ""
 MACHINE_FEATURES = ""
 
-PATH_prepend = "${COREBASE}/scripts/native-intercept:"
+PATH:prepend = "${COREBASE}/scripts/native-intercept:"
 
 # This class encodes staging paths into its scripts data so can only be
 # reused if we manipulate the paths.
@@ -133,7 +133,7 @@ python native_virtclass_handler () {
 
     def map_dependencies(varname, d, suffix = "", selfref=True):
         if suffix:
-            varname = varname + "_" + suffix
+            varname = varname + ":" + suffix
         deps = d.getVar(varname)
         if not deps:
             return
@@ -195,3 +195,34 @@ USE_NLS = "no"
 
 RECIPERDEPTASK = "do_populate_sysroot"
 do_populate_sysroot[rdeptask] = "${RECIPERDEPTASK}"
+
+#
+# Native task outputs are directly run on the target (host) system after being
+# built. Even if the output of this recipe doesn't change, a change in one of
+# its dependencies may cause a change in the output it generates (e.g. rpm
+# output depends on the output of its dependent zstd library).
+#
+# This can cause poor interactions with hash equivalence, since this recipes
+# output-changing dependency is "hidden" and downstream task only see that this
+# recipe has the same outhash and therefore is equivalent. This can result in
+# different output in different cases.
+#
+# To resolve this, unhide the output-changing dependency by adding its unihash
+# to this tasks outhash calculation. Unfortunately, don't know specifically
+# know which dependencies are output-changing, so we have to add all of them.
+#
+python native_add_do_populate_sysroot_deps () {
+    current_task = "do_" + d.getVar("BB_CURRENTTASK")
+    if current_task != "do_populate_sysroot":
+        return
+
+    taskdepdata = d.getVar("BB_TASKDEPDATA", False)
+    pn = d.getVar("PN")
+    deps = {
+        dep[0]:dep[6] for dep in taskdepdata.values() if
+            dep[1] == current_task and dep[0] != pn
+    }
+
+    d.setVar("HASHEQUIV_EXTRA_SIGDATA", "\n".join("%s: %s" % (k, deps[k]) for k in sorted(deps.keys())))
+}
+SSTATECREATEFUNCS += "native_add_do_populate_sysroot_deps"

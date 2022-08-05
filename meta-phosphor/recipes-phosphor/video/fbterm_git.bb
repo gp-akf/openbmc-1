@@ -1,7 +1,7 @@
 HOMEPAGE = "https://github.com/jk-ozlabs/fbterm"
-LICENSE = "GPLv2+"
+LICENSE = "GPL-2.0-or-later"
 
-SRC_URI += "git://github.com/jk-ozlabs/fbterm.git;nobranch=1"
+SRC_URI += "git://github.com/jk-ozlabs/fbterm.git;nobranch=1;protocol=https"
 SRC_URI += "file://fb.modes"
 PR = "r1"
 
@@ -25,5 +25,5 @@ do_install() {
     install -m 0644 ${WORKDIR}/fb.modes ${D}${sysconfdir}/
 }
 
-SYSTEMD_SERVICE_${PN} += "fbterm.service"
-SYSTEMD_ENVIRONMENT_FILE_${PN} += "fbterm"
+SYSTEMD_SERVICE:${PN} += "fbterm.service"
+SYSTEMD_ENVIRONMENT_FILE:${PN} += "fbterm"

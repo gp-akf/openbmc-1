@@ -2,7 +2,7 @@ SUMMARY = "Dovecot is an open source IMAP and POP3 email server"
 HOMEPAGE = "https://www.dovecot.org/"
 DESCRIPTION = "Dovecot is an open source IMAP and POP3 email server for Linux/UNIX-like systems, written with security primarily in mind. Dovecot is an excellent choice for both small and large installations. It's fast, simple to set up, requires no special administration and it uses very little memory."
 SECTION = "mail"
-LICENSE = "LGPLv2.1 & MIT"
+LICENSE = "LGPL-2.1-only & MIT"
 LIC_FILES_CHKSUM = "file://COPYING;md5=2956560272e5b31d9d64f03111732048"
 
 SRC_URI = "http://dovecot.org/releases/2.3/dovecot-${PV}.tar.gz \
@@ -50,10 +50,10 @@ EXTRA_OECONF = " --with-ioloop=epoll \
 LTO = ""
 
 SYSTEMD_PACKAGES = "${PN}"
-SYSTEMD_SERVICE_${PN} = "dovecot.service dovecot.socket"
+SYSTEMD_SERVICE:${PN} = "dovecot.service dovecot.socket"
 SYSTEMD_AUTO_ENABLE = "disable"
 
-do_install_append () {
+do_install:append () {
     install -d 755 ${D}/etc/dovecot
     touch 644 ${D}/etc/dovecot/dovecot.conf
     install -m 0644 ${WORKDIR}/dovecot.service ${D}${systemd_unitdir}/system
@@ -62,13 +62,16 @@ do_install_append () {
 }
 
 USERADD_PACKAGES = "${PN}"
-USERADD_PARAM_${PN} = "-r -d ${libexecdir} -M -s ${base_sbindir}/nologin -g dovecot dovecot; \
+USERADD_PARAM:${PN} = "-r -d ${libexecdir} -M -s ${base_sbindir}/nologin -g dovecot dovecot; \
                       -r -d ${libexecdir} -M -s ${base_sbindir}/nologin -g dovenull dovenull"
-GROUPADD_PARAM_${PN} = "-f -r dovecot;-f -r dovenull"
+GROUPADD_PARAM:${PN} = "-f -r dovecot;-f -r dovenull"
 
-FILES_${PN} += "${libdir}/dovecot/*plugin.so \
+FILES:${PN} += "${libdir}/dovecot/*plugin.so \
                 ${libdir}/dovecot/libfs_compress.so \
                 ${libdir}/dovecot/libssl_iostream_openssl.so"
-FILES_${PN}-staticdev += "${libdir}/dovecot/*/*.a"
-FILES_${PN}-dev += "${libdir}/dovecot/libdovecot*.so"
-FILES_${PN}-dbg += "${libdir}/dovecot/*/.debug"
+FILES:${PN}-staticdev += "${libdir}/dovecot/*/*.a"
+FILES:${PN}-dev += "${libdir}/dovecot/libdovecot*.so"
+FILES:${PN}-dbg += "${libdir}/dovecot/*/.debug"
+
+# CVE-2016-4983 affects only postinstall script on specific distribution
+CVE_CHECK_IGNORE += "CVE-2016-4983"

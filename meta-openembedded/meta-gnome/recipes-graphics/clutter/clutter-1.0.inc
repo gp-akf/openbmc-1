@@ -3,7 +3,7 @@ DESCRIPTION = "Clutter is an Open GL based interactive canvas library, \
 designed for creating fast, mainly 2D single window applications such as media \
 box UIs, presentations, kiosk style applications and so on."
 HOMEPAGE = "http://www.clutter-project.org/"
-LICENSE = "LGPLv2.1+"
+LICENSE = "LGPL-2.1-or-later"
 
 inherit clutter ptest-gnome features_check upstream-version-is-even gobject-introspection
 # depends on cogl-1.0 which needs opengl
@@ -41,9 +41,9 @@ PACKAGECONFIG ??= "egl gdk \
                    ${@bb.utils.filter('DISTRO_FEATURES', 'wayland', d)} \
                    ${@bb.utils.contains('DISTRO_FEATURES', 'x11', 'glx x11', '', d)}"
 
-FILES_${PN}-examples = "${libdir}/clutter/examples"
+FILES:${PN}-examples = "${libdir}/clutter/examples"
 
-do_configure_prepend() {
+do_configure:prepend() {
 	# see https://bugzilla.gnome.org/show_bug.cgi?id=661128 for this
 	touch -t 200001010000 ${S}/po/clutter-1.0.pot
 }

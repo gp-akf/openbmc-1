@@ -5,7 +5,7 @@
 #  1) original (or unpacked) source: ARCHIVER_MODE[src] = "original"
 #  2) patched source: ARCHIVER_MODE[src] = "patched" (default)
 #  3) configured source: ARCHIVER_MODE[src] = "configured"
-#  4) source mirror: ARCHIVE_MODE[src] = "mirror"
+#  4) source mirror: ARCHIVER_MODE[src] = "mirror"
 #  5) The patches between do_unpack and do_patch:
 #     ARCHIVER_MODE[diff] = "1"
 #     And you can set the one that you'd like to exclude from the diff:
@@ -51,18 +51,20 @@ ARCHIVER_MODE[diff-exclude] ?= ".pc autom4te.cache patches"
 ARCHIVER_MODE[dumpdata] ?= "0"
 ARCHIVER_MODE[recipe] ?= "0"
 ARCHIVER_MODE[mirror] ?= "split"
+ARCHIVER_MODE[compression] ?= "xz"
 
 DEPLOY_DIR_SRC ?= "${DEPLOY_DIR}/sources"
 ARCHIVER_TOPDIR ?= "${WORKDIR}/archiver-sources"
-ARCHIVER_OUTDIR = "${ARCHIVER_TOPDIR}/${TARGET_SYS}/${PF}/"
+ARCHIVER_ARCH = "${TARGET_SYS}"
+ARCHIVER_OUTDIR = "${ARCHIVER_TOPDIR}/${ARCHIVER_ARCH}/${PF}/"
 ARCHIVER_RPMTOPDIR ?= "${WORKDIR}/deploy-sources-rpm"
-ARCHIVER_RPMOUTDIR = "${ARCHIVER_RPMTOPDIR}/${TARGET_SYS}/${PF}/"
+ARCHIVER_RPMOUTDIR = "${ARCHIVER_RPMTOPDIR}/${ARCHIVER_ARCH}/${PF}/"
 ARCHIVER_WORKDIR = "${WORKDIR}/archiver-work/"
 
 # When producing a combined mirror directory, allow duplicates for the case
 # where multiple recipes use the same SRC_URI.
 ARCHIVER_COMBINED_MIRRORDIR = "${ARCHIVER_TOPDIR}/mirror"
-SSTATE_DUPWHITELIST += "${DEPLOY_DIR_SRC}/mirror"
+SSTATE_ALLOW_OVERLAP_FILES += "${DEPLOY_DIR_SRC}/mirror"
 
 do_dumpdata[dirs] = "${ARCHIVER_OUTDIR}"
 do_ar_recipe[dirs] = "${ARCHIVER_OUTDIR}"
@@ -99,6 +101,10 @@ python () {
             and not pn.startswith('gcc-source'):
         bb.debug(1, 'archiver: %s is excluded, covered by gcc-source' % pn)
         return
+
+    # TARGET_SYS in ARCHIVER_ARCH will break the stamp for gcc-source in multiconfig
+    if pn.startswith('gcc-source'):
+        d.setVar('ARCHIVER_ARCH', "allarch")
 
     def hasTask(task):
         return bool(d.getVarFlag(task, "task", False)) and not bool(d.getVarFlag(task, "noexec", False))
@@ -281,7 +287,10 @@ python do_ar_configured() {
         # ${STAGING_DATADIR}/aclocal/libtool.m4, so we can't re-run the
         # do_configure, we archive the already configured ${S} to
         # instead of.
-        elif pn != 'libtool-native':
+        # The kernel class functions require it to be on work-shared, we
+        # don't unpack, patch, configure again, just archive the already
+        # configured ${S}
+        elif not (pn == 'libtool-native' or is_work_shared(d)):
             def runTask(task):
                 prefuncs = d.getVarFlag(task, 'prefuncs') or ''
                 for func in prefuncs.split():
@@ -406,15 +415,16 @@ def create_tarball(d, srcdir, suffix, ar_outdir):
     # that we archive the actual directory and not just the link.
     srcdir = os.path.realpath(srcdir)
 
+    compression_method = d.getVarFlag('ARCHIVER_MODE', 'compression')
     bb.utils.mkdirhier(ar_outdir)
     if suffix:
-        filename = '%s-%s.tar.gz' % (d.getVar('PF'), suffix)
+        filename = '%s-%s.tar.%s' % (d.getVar('PF'), suffix, compression_method)
     else:
-        filename = '%s.tar.gz' % d.getVar('PF')
+        filename = '%s.tar.%s' % (d.getVar('PF'), compression_method)
     tarname = os.path.join(ar_outdir, filename)
 
     bb.note('Creating %s' % tarname)
-    tar = tarfile.open(tarname, 'w:gz')
+    tar = tarfile.open(tarname, 'w:%s' % compression_method)
     tar.add(srcdir, arcname=os.path.basename(srcdir), filter=exclude_useless_paths)
     tar.close()
 
@@ -482,6 +492,9 @@ python do_unpack_and_patch() {
         src = d.getVar('S').rstrip('/')
         src_orig = '%s.orig' % src
         oe.path.copytree(src, src_orig)
+
+    if bb.data.inherits_class('dos2unix', d):
+        bb.build.exec_func('do_convert_crlf_to_lf', d)
 
     # Make sure gcc and kernel sources are patched only once
     if not (d.getVar('SRC_URI') == "" or is_work_shared(d)):
@@ -571,7 +584,7 @@ python do_dumpdata () {
 
 SSTATETASKS += "do_deploy_archives"
 do_deploy_archives () {
-    echo "Deploying source archive files from ${ARCHIVER_TOPDIR} to ${DEPLOY_DIR_SRC}."
+    bbnote "Deploying source archive files from ${ARCHIVER_TOPDIR} to ${DEPLOY_DIR_SRC}."
 }
 python do_deploy_archives_setscene () {
     sstate_setscene(d)

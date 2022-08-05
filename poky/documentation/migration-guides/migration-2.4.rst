@@ -51,7 +51,7 @@ occurred:
       ``su`` is normally provided through the shadow file format. The
       main ``util-linux`` package has runtime dependencies (i.e.
       :term:`RDEPENDS`) on the ``util-linux-su`` package
-      when "pam" is in ``DISTRO_FEATURES``.
+      when "pam" is in :term:`DISTRO_FEATURES`.
 
    -  The ``switch_root`` program is now packaged in a separate
       "util-linux-switch-root" package for small initramfs images that
@@ -72,10 +72,10 @@ occurred:
    change also eliminates needing to pull in the entire ``initscripts``
    package. The main ``initscripts`` package has a runtime dependency
    (i.e. :term:`RDEPENDS`) on the ``sushell`` package when "selinux" is in
-   ``DISTRO_FEATURES``.
+   :term:`DISTRO_FEATURES`.
 
 -  ``glib-2.0``: The ``glib-2.0`` package now has a recommended
-   runtime dependency (i.e. ``RRECOMMENDS``) on the ``shared-mime-info``
+   runtime dependency (i.e. :term:`RRECOMMENDS`) on the ``shared-mime-info``
    package, since large portions of GIO are not useful without the MIME
    database. You can remove the dependency by using the
    :term:`BAD_RECOMMENDATIONS` variable if
@@ -273,7 +273,7 @@ The following are additional changes:
    a single commit per build rather than one commit per subdirectory in
    the repository. This behavior assumes the commits are enabled with
    :term:`BUILDHISTORY_COMMIT` = "1", which
-   is typical. Previously, the ``buildhistory`` class made one commit
+   is typical. Previously, the :ref:`buildhistory <ref-classes-buildhistory>` class made one commit
    per subdirectory in the repository in order to make it easier to see
    the changes for a particular subdirectory. To view a particular
    change, specify that subdirectory as the last parameter on the
@@ -286,8 +286,8 @@ The following are additional changes:
 
 -  BitBake fires multiple "BuildStarted" events when multiconfig is
    enabled (one per configuration). For more information, see the
-   ":ref:`Events <bitbake:bitbake-user-manual/bitbake-user-manual-metadata:events>`" section in the BitBake User
-   Manual.
+   ":ref:`bitbake:bitbake-user-manual/bitbake-user-manual-metadata:events`"
+   section in the BitBake User Manual.
 
 -  By default, the ``security_flags.inc`` file sets a
    :term:`GCCPIE` variable with an option to enable
@@ -301,7 +301,7 @@ The following are additional changes:
    likely be removed in the next Yocto Project release.
 
 -  The ``vmdk``, ``vdi``, and ``qcow2`` image file types are now used in
-   conjunction with the "wic" image type through ``CONVERSION_CMD``.
+   conjunction with the "wic" image type through :term:`CONVERSION_CMD`.
    Consequently, the equivalent image types are now ``wic.vmdk``,
    ``wic.vdi``, and ``wic.qcow2``, respectively.
 

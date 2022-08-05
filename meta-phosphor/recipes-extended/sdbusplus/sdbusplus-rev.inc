@@ -1,6 +1,6 @@
 HOMEPAGE = "http://github.com/openbmc/sdbusplus"
 PR = "r1"
-PV = "1.0+git${SRCPV}"
+PV ?= "1.0+git${SRCPV}"
 
-SRC_URI += "git://github.com/openbmc/sdbusplus"
-SRCREV = "270f242cc2d80c2c77e5774eb461ca8a23863fb9"
+SRC_URI += "git://github.com/openbmc/sdbusplus;branch=master;protocol=https"
+SRCREV = "8a97100b806225df40c490eb748c9a4e1b3c11b3"

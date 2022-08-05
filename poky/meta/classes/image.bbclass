@@ -15,6 +15,7 @@ IMGCLASSES += "${@bb.utils.contains('IMAGE_FSTYPES', 'container', 'image-contain
 IMGCLASSES += "image_types_wic"
 IMGCLASSES += "rootfs-postcommands"
 IMGCLASSES += "image-postinst-intercepts"
+IMGCLASSES += "overlayfs-etc"
 inherit ${IMGCLASSES}
 
 TOOLCHAIN_TARGET_TASK += "${PACKAGE_INSTALL}"
@@ -26,14 +27,14 @@ PACKAGES = ""
 DEPENDS += "${@' '.join(["%s-qemuwrapper-cross" % m for m in d.getVar("MULTILIB_VARIANTS").split()])} qemuwrapper-cross depmodwrapper-cross cross-localedef-native"
 RDEPENDS += "${PACKAGE_INSTALL} ${LINGUAS_INSTALL} ${IMAGE_INSTALL_DEBUGFS}"
 RRECOMMENDS += "${PACKAGE_INSTALL_ATTEMPTONLY}"
-PATH_prepend = "${@":".join(all_multilib_tune_values(d, 'STAGING_BINDIR_CROSS').split())}:"
+PATH:prepend = "${@":".join(all_multilib_tune_values(d, 'STAGING_BINDIR_CROSS').split())}:"
 
 INHIBIT_DEFAULT_DEPS = "1"
 
 # IMAGE_FEATURES may contain any available package group
 IMAGE_FEATURES ?= ""
 IMAGE_FEATURES[type] = "list"
-IMAGE_FEATURES[validitems] += "debug-tweaks read-only-rootfs read-only-rootfs-delayed-postinsts stateless-rootfs empty-root-password allow-empty-password allow-root-login post-install-logging"
+IMAGE_FEATURES[validitems] += "debug-tweaks read-only-rootfs read-only-rootfs-delayed-postinsts stateless-rootfs empty-root-password allow-empty-password allow-root-login post-install-logging overlayfs-etc"
 
 # Generate companion debugfs?
 IMAGE_GEN_DEBUGFS ?= "0"
@@ -53,7 +54,7 @@ FEATURE_INSTALL_OPTIONAL[vardepvalue] = "${FEATURE_INSTALL_OPTIONAL}"
 
 # Define some very basic feature package groups
 FEATURE_PACKAGES_package-management = "${ROOTFS_PKGMANAGE}"
-SPLASH ?= "psplash"
+SPLASH ?= "${@bb.utils.contains("MACHINE_FEATURES", "screen", "psplash", "", d)}"
 FEATURE_PACKAGES_splash = "${SPLASH}"
 
 IMAGE_INSTALL_COMPLEMENTARY = '${@complementary_globs("IMAGE_FEATURES", d)}'
@@ -92,7 +93,7 @@ PID = "${@os.getpid()}"
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 LDCONFIGDEPEND ?= "ldconfig-native:do_populate_sysroot"
-LDCONFIGDEPEND_libc-musl = ""
+LDCONFIGDEPEND:libc-musl = ""
 
 # This is needed to have depmod data in PKGDATA_DIR,
 # but if you're building small initramfs image
@@ -131,14 +132,22 @@ def rootfs_variables(d):
 
 do_rootfs[vardeps] += "${@rootfs_variables(d)}"
 
-do_build[depends] += "virtual/kernel:do_deploy"
+# This is needed to have kernel image in DEPLOY_DIR.
+# This follows many common usecases and user expectations.
+# But if you are building an image which doesn't need the kernel image at all,
+# you can unset this variable manually.
+KERNEL_DEPLOY_DEPEND ?= "virtual/kernel:do_deploy"
+do_build[depends] += "${KERNEL_DEPLOY_DEPEND}"
 
 
 python () {
     def extraimage_getdepends(task):
         deps = ""
         for dep in (d.getVar('EXTRA_IMAGEDEPENDS') or "").split():
-            deps += " %s:%s" % (dep, task)
+            if ":" in dep:
+                deps += " %s " % (dep)
+            else:
+                deps += " %s:%s" % (dep, task)
         return deps
 
     d.appendVarFlag('do_image_complete', 'depends', extraimage_getdepends('do_populate_sysroot'))
@@ -249,7 +258,7 @@ fakeroot python do_rootfs () {
     progress_reporter.finish()
 }
 do_rootfs[dirs] = "${TOPDIR}"
-do_rootfs[cleandirs] += "${S} ${IMGDEPLOYDIR}"
+do_rootfs[cleandirs] += "${IMAGE_ROOTFS} ${IMGDEPLOYDIR} ${S}"
 do_rootfs[file-checksums] += "${POSTINST_INTERCEPT_CHECKSUMS}"
 addtask rootfs after do_prepare_recipe_sysroot
 
@@ -273,7 +282,7 @@ fakeroot python do_image_complete () {
 }
 do_image_complete[dirs] = "${TOPDIR}"
 SSTATETASKS += "do_image_complete"
-SSTATE_SKIP_CREATION_task-image-complete = '1'
+SSTATE_SKIP_CREATION:task-image-complete = '1'
 do_image_complete[sstate-inputdirs] = "${IMGDEPLOYDIR}"
 do_image_complete[sstate-outputdirs] = "${DEPLOY_DIR_IMAGE}"
 do_image_complete[stamp-extra-info] = "${MACHINE_ARCH}"
@@ -314,7 +323,7 @@ fakeroot python do_image_qa () {
 addtask do_image_qa after do_rootfs before do_image
 
 SSTATETASKS += "do_image_qa"
-SSTATE_SKIP_CREATION_task-image-qa = '1'
+SSTATE_SKIP_CREATION:task-image-qa = '1'
 do_image_qa[sstate-inputdirs] = ""
 do_image_qa[sstate-outputdirs] = ""
 python do_image_qa_setscene () {
@@ -382,8 +391,8 @@ python () {
         if t.startswith("debugfs_"):
             t = t[8:]
             debug = "debugfs_"
-        deps = (d.getVar('IMAGE_TYPEDEP_' + t) or "").split()
-        vardeps.add('IMAGE_TYPEDEP_' + t)
+        deps = (d.getVar('IMAGE_TYPEDEP:' + t) or "").split()
+        vardeps.add('IMAGE_TYPEDEP:' + t)
         if baset not in typedeps:
             typedeps[baset] = set()
         deps = [debug + dep for dep in deps]
@@ -431,21 +440,22 @@ python () {
         localdata.delVar('DATETIME')
         localdata.delVar('DATE')
         localdata.delVar('TMPDIR')
-        vardepsexclude = (d.getVarFlag('IMAGE_CMD_' + realt, 'vardepsexclude', True) or '').split()
+        localdata.delVar('IMAGE_VERSION_SUFFIX')
+        vardepsexclude = (d.getVarFlag('IMAGE_CMD:' + realt, 'vardepsexclude', True) or '').split()
         for dep in vardepsexclude:
             localdata.delVar(dep)
 
         image_cmd = localdata.getVar("IMAGE_CMD")
-        vardeps.add('IMAGE_CMD_' + realt)
+        vardeps.add('IMAGE_CMD:' + realt)
         if image_cmd:
             cmds.append("\t" + image_cmd)
         else:
             bb.fatal("No IMAGE_CMD defined for IMAGE_FSTYPES entry '%s' - possibly invalid type name or missing support class" % t)
         cmds.append(localdata.expand("\tcd ${IMGDEPLOYDIR}"))
 
-        # Since a copy of IMAGE_CMD_xxx will be inlined within do_image_xxx,
-        # prevent a redundant copy of IMAGE_CMD_xxx being emitted as a function.
-        d.delVarFlag('IMAGE_CMD_' + realt, 'func')
+        # Since a copy of IMAGE_CMD:xxx will be inlined within do_image_xxx,
+        # prevent a redundant copy of IMAGE_CMD:xxx being emitted as a function.
+        d.delVarFlag('IMAGE_CMD:' + realt, 'func')
 
         rm_tmp_images = set()
         def gen_conversion_cmds(bt):
@@ -457,11 +467,10 @@ python () {
                     # Create input image first.
                     gen_conversion_cmds(type)
                     localdata.setVar('type', type)
-                    cmd = "\t" + (localdata.getVar("CONVERSION_CMD_" + ctype) or localdata.getVar("COMPRESS_CMD_" + ctype))
+                    cmd = "\t" + localdata.getVar("CONVERSION_CMD:" + ctype)
                     if cmd not in cmds:
                         cmds.append(cmd)
-                    vardeps.add('CONVERSION_CMD_' + ctype)
-                    vardeps.add('COMPRESS_CMD_' + ctype)
+                    vardeps.add('CONVERSION_CMD:' + ctype)
                     subimage = type + "." + ctype
                     if subimage not in subimages:
                         subimages.append(subimage)
@@ -619,20 +628,20 @@ deltask do_package_write_rpm
 create_merged_usr_symlinks() {
     root="$1"
     install -d $root${base_bindir} $root${base_sbindir} $root${base_libdir}
-    lnr $root${base_bindir} $root/bin
-    lnr $root${base_sbindir} $root/sbin
-    lnr $root${base_libdir} $root/${baselib}
+    ln -rs $root${base_bindir} $root/bin
+    ln -rs $root${base_sbindir} $root/sbin
+    ln -rs $root${base_libdir} $root/${baselib}
 
     if [ "${nonarch_base_libdir}" != "${base_libdir}" ]; then
        install -d $root${nonarch_base_libdir}
-       lnr $root${nonarch_base_libdir} $root/lib
+       ln -rs $root${nonarch_base_libdir} $root/lib
     fi
 
     # create base links for multilibs
     multi_libdirs="${@d.getVar('MULTILIB_VARIANTS')}"
     for d in $multi_libdirs; do
         install -d $root${exec_prefix}/$d
-        lnr $root${exec_prefix}/$d $root/$d
+        ln -rs $root${exec_prefix}/$d $root/$d
     done
 }
 
@@ -648,17 +657,15 @@ ROOTFS_PREPROCESS_COMMAND += "${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge'
 POPULATE_SDK_PRE_TARGET_COMMAND += "${@bb.utils.contains('DISTRO_FEATURES', 'usrmerge', 'create_merged_usr_symlinks_sdk; ', '',d)}"
 
 reproducible_final_image_task () {
-    if [ "${BUILD_REPRODUCIBLE_BINARIES}" = "1" ]; then
+    if [ "$REPRODUCIBLE_TIMESTAMP_ROOTFS" = "" ]; then
+        REPRODUCIBLE_TIMESTAMP_ROOTFS=`git -C "${COREBASE}" log -1 --pretty=%ct 2>/dev/null` || true
         if [ "$REPRODUCIBLE_TIMESTAMP_ROOTFS" = "" ]; then
-            REPRODUCIBLE_TIMESTAMP_ROOTFS=`git -C "${COREBASE}" log -1 --pretty=%ct 2>/dev/null` || true
-            if [ "$REPRODUCIBLE_TIMESTAMP_ROOTFS" = "" ]; then
-                REPRODUCIBLE_TIMESTAMP_ROOTFS=`stat -c%Y ${@bb.utils.which(d.getVar("BBPATH"), "conf/bitbake.conf")}`
-            fi
+            REPRODUCIBLE_TIMESTAMP_ROOTFS=`stat -c%Y ${@bb.utils.which(d.getVar("BBPATH"), "conf/bitbake.conf")}`
         fi
-        # Set mtime of all files to a reproducible value
-        bbnote "reproducible_final_image_task: mtime set to $REPRODUCIBLE_TIMESTAMP_ROOTFS"
-        find  ${IMAGE_ROOTFS} -print0 | xargs -0 touch -h  --date=@$REPRODUCIBLE_TIMESTAMP_ROOTFS
     fi
+    # Set mtime of all files to a reproducible value
+    bbnote "reproducible_final_image_task: mtime set to $REPRODUCIBLE_TIMESTAMP_ROOTFS"
+    find  ${IMAGE_ROOTFS} -print0 | xargs -0 touch -h  --date=@$REPRODUCIBLE_TIMESTAMP_ROOTFS
 }
 
 systemd_preset_all () {
@@ -667,6 +674,6 @@ systemd_preset_all () {
     fi
 }
 
-IMAGE_PREPROCESS_COMMAND_append = " ${@ 'systemd_preset_all;' if bb.utils.contains('DISTRO_FEATURES', 'systemd', True, False, d) and not bb.utils.contains('IMAGE_FEATURES', 'stateless-rootfs', True, False, d) else ''} reproducible_final_image_task; "
+IMAGE_PREPROCESS_COMMAND:append = " ${@ 'systemd_preset_all;' if bb.utils.contains('DISTRO_FEATURES', 'systemd', True, False, d) and not bb.utils.contains('IMAGE_FEATURES', 'stateless-rootfs', True, False, d) else ''} reproducible_final_image_task; "
 
 CVE_PRODUCT = ""

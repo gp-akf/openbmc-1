@@ -1,6 +1,6 @@
 HOMEPAGE = "https://github.com/inspur-bmc/fp5280g2-psu-update-tool"
 
-SRC_URI = "git://github.com/inspur-bmc/fp5280g2-psu-update-tool"
+SRC_URI = "git://github.com/inspur-bmc/fp5280g2-psu-update-tool;branch=master;protocol=https"
 
 SRCREV = "d9cc0d32197163197c41dc1c5e4613edd7ebacf1"
 
@@ -16,5 +16,5 @@ do_install() {
         install -m 0755 ${S}/fp5280g2-psu-update ${D}${bindir}/fp5280g2-psu-update
 }
 
-INSANE_SKIP_${PN} = "ldflags"
+INSANE_SKIP:${PN} = "ldflags"
 

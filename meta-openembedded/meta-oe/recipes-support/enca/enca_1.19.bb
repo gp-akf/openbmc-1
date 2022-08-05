@@ -4,7 +4,7 @@ HOMEPAGE = "https://cihar.com/software/enca/"
 
 DEPENDS += "gettext-native"
 
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=24b9569831c46d4818450b55282476b4"
 
 SRC_URI = "https://dl.cihar.com/enca/enca-${PV}.tar.gz \
@@ -16,12 +16,12 @@ SRC_URI[sha256sum] = "4c305cc59f3e57f2cfc150a6ac511690f43633595760e1cb266bf23362
 
 inherit autotools
 
-do_configure_prepend() {
+do_configure:prepend() {
     # remove failing test which checks for something that isn't even used
     sed -i -e '/ye_FUNC_SCANF_MODIF_SIZE_T/d' ${S}/configure.ac
 }
 
-do_configure_append() {
+do_configure:append() {
     sed -i s:-I/usr/include::g ${B}/Makefile
     sed -i s:-I/usr/include::g ${B}/*/Makefile
 }

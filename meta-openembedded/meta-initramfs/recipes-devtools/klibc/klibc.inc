@@ -2,7 +2,7 @@ DESCRIPTION = "klibc is intended to be a minimalistic libc subset for \
 use with initramfs.  It is deliberately written for small size, \
 minimal entaglement, and portability, not speed."
 SECTION = "libs"
-LICENSE = "BSD-3-Clause & GPL-2.0 & MIT & Zlib"
+LICENSE = "BSD-3-Clause & GPL-2.0-only & MIT & Zlib"
 LIC_FILES_CHKSUM = "file://usr/klibc/LICENSE;md5=d75181f10e998c21eb147f6d2e43ce8b"
 DEPENDS = "linux-libc-headers perl-native"
 
@@ -25,7 +25,7 @@ SRC_URI = "${KERNELORG_MIRROR}/linux/libs/klibc/2.0/klibc-${PV}.tar.xz \
 
 ARMPATCHES ?= ""
 
-ARMPATCHES_arm = " \
+ARMPATCHES:arm = " \
                   file://armv4-fix-v4bx.patch \
                  "
 SRC_URI[sha256sum] = "4e48f1398cfe3ce0b6df55ce6e70acf54fc8488e3aea3fb3610ee1622d9cb436"
@@ -33,8 +33,8 @@ SRC_URI[sha256sum] = "4e48f1398cfe3ce0b6df55ce6e70acf54fc8488e3aea3fb3610ee1622d
 S = "${WORKDIR}/klibc-${PV}"
 
 OPTFLAGS = "${TUNE_CCARGS} -Os -fcommon"
-OPTFLAGS_append_toolchain-clang = " -fno-builtin-bcmp"
-OPTFLAGS_append_toolchain-clang_mipsarch = " -no-integrated-as"
+OPTFLAGS:append:toolchain-clang = " -fno-builtin-bcmp"
+OPTFLAGS:append:toolchain-clang:mipsarch = " -no-integrated-as"
 
 PARALLEL_MAKE = ""
 EXTRA_OEMAKE = "'KLIBCARCH=${KLIBC_ARCH}' \
@@ -57,22 +57,22 @@ do_configure () {
     ln -sf "${STAGING_DIR_TARGET}${exec_prefix}" linux
 }
 
-do_compile_prepend_toolchain-clang() {
+do_compile:prepend:toolchain-clang() {
     sed -i -e 's#$(KLIBCROSS)gcc#$(KLIBCROSS)clang#g' ${S}/Makefile
 }
 
 INHIBIT_PACKAGE_STRIP = "1"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
-INSANE_SKIP_${PN} = "already-stripped"
-INSANE_SKIP_libklibc-dev = "dev-elf"
+INSANE_SKIP:${PN} = "already-stripped"
+INSANE_SKIP:libklibc-dev = "dev-elf"
 KLIBC_ARCH = "${TARGET_ARCH}"
-KLIBC_ARCH_aarch64 = "arm64"
-KLIBC_ARCH_armeb = "arm"
-KLIBC_ARCH_mipsel = "mips"
-KLIBC_ARCH_mips64el = "mips64"
-KLIBC_ARCH_x86 = "i386"
-KLIBC_ARCH_x86-64 = "x86_64"
-KLIBC_ARCH_powerpc = "ppc"
-KLIBC_ARCH_powerpc64 = "ppc64"
-KLIBC_ARCH_powerpc64le = "ppc64"
+KLIBC_ARCH:aarch64 = "arm64"
+KLIBC_ARCH:armeb = "arm"
+KLIBC_ARCH:mipsel = "mips"
+KLIBC_ARCH:mips64el = "mips64"
+KLIBC_ARCH:x86 = "i386"
+KLIBC_ARCH:x86-64 = "x86_64"
+KLIBC_ARCH:powerpc = "ppc"
+KLIBC_ARCH:powerpc64 = "ppc64"
+KLIBC_ARCH:powerpc64le = "ppc64"
 THIS_LIBKLIBC = "libklibc (= ${PV}-${PR})"

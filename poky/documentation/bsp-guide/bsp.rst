@@ -1,8 +1,8 @@
 .. SPDX-License-Identifier: CC-BY-SA-2.0-UK
 
-************************************************
-Board Support Packages (BSP) - Developer's Guide
-************************************************
+**************************************************
+Board Support Packages (BSP) --- Developer's Guide
+**************************************************
 
 A Board Support Package (BSP) is a collection of information that
 defines how to support a particular hardware device, set of devices, or
@@ -166,8 +166,9 @@ section.
 #. *Determine the BSP Layer You Want:* The Yocto Project supports many
    BSPs, which are maintained in their own layers or in layers designed
    to contain several BSPs. To get an idea of machine support through
-   BSP layers, you can look at the `index of
-   machines <&YOCTO_RELEASE_DL_URL;/machines>`__ for the release.
+   BSP layers, you can look at the
+   :yocto_dl:`index of machines </releases/yocto/yocto-&DISTRO;/machines>`
+   for the release.
 
 #. *Optionally Clone the meta-intel BSP Layer:* If your hardware is
    based on current Intel CPUs and devices, you can leverage this BSP
@@ -724,6 +725,7 @@ workflow.
 
 .. image:: figures/bsp-dev-flow.png
    :align: center
+   :width: 70%
 
 #. *Set up Your Host Development System to Support Development Using the
    Yocto Project*: See the ":ref:`dev-manual/start:preparing the build host`"
@@ -877,7 +879,7 @@ Yocto Project:
    your BSP layer as listed in the ``recipes.txt`` file, which is found
    in ``poky/meta`` directory of the :term:`Source Directory`
    or in the OpenEmbedded-Core Layer (``openembedded-core``) at
-   https://git.openembedded.org/openembedded-core/tree/meta.
+   :oe_git:`/openembedded-core/tree/meta`.
 
    You should place recipes (``*.bb`` files) and recipe modifications
    (``*.bbappend`` files) into ``recipes-*`` subdirectories by
@@ -1011,9 +1013,9 @@ If you plan on customizing a recipe for a particular BSP, you need to do
 the following:
 
 -  Create a ``*.bbappend`` file for the modified recipe. For information on using
-   append files, see the ":ref:`dev-manual/common-tasks:using
-   .bbappend files in your layer`" section in the Yocto Project Development
-   Tasks Manual.
+   append files, see the
+   ":ref:`dev-manual/common-tasks:appending other layers metadata with your layer`"
+   section in the Yocto Project Development Tasks Manual.
 
 -  Ensure your directory structure in the BSP layer that supports your
    machine is such that the OpenEmbedded build system can find it. See
@@ -1042,7 +1044,7 @@ also supports several other machines:
 #. Edit the ``init-ifupdown_1.0.bbappend`` file so that it contains the
    following::
 
-      FILESEXTRAPATHS_prepend := "${THISDIR}/files:"
+      FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
    The append file needs to be in the ``meta-xyz/recipes-core/init-ifupdown``
    directory.
@@ -1112,7 +1114,7 @@ list describes them in order of preference:
 #. *Use the LICENSE_FLAGS Variable to Define the Recipes that Have Commercial or
    Other Types of Specially-Licensed Packages:* For each of those recipes, you can
    specify a matching license string in a ``local.conf`` variable named
-   :term:`LICENSE_FLAGS_WHITELIST`.
+   :term:`LICENSE_FLAGS_ACCEPTED`.
    Specifying the matching license string signifies that you agree to
    the license. Thus, the build system can build the corresponding
    recipe and include the component in the image. See the
@@ -1121,15 +1123,15 @@ list describes them in order of preference:
    how to use these variables.
 
    If you build as you normally would, without specifying any recipes in
-   the :term:`LICENSE_FLAGS_WHITELIST`, the build stops and provides you
-   with the list of recipes that you have tried to include in the image
-   that need entries in the :term:`LICENSE_FLAGS_WHITELIST`. Once you enter
-   the appropriate license flags into the whitelist, restart the build
-   to continue where it left off. During the build, the prompt will not
-   appear again since you have satisfied the requirement.
+   the :term:`LICENSE_FLAGS_ACCEPTED` variable, the build stops and provides
+   you with the list of recipes that you have tried to include in the image
+   that need entries in the :term:`LICENSE_FLAGS_ACCEPTED` variable. Once you
+   enter the appropriate license flags into it, restart the build to continue
+   where it left off. During the build, the prompt will not appear again since
+   you have satisfied the requirement.
 
    Once the appropriate license flags are on the white list in the
-   :term:`LICENSE_FLAGS_WHITELIST` variable, you can build the encumbered
+   :term:`LICENSE_FLAGS_ACCEPTED` variable, you can build the encumbered
    image with no change at all to the normal build process.
 
 #. *Get a Pre-Built Version of the BSP:* You can get this type of BSP by
@@ -1142,7 +1144,7 @@ list describes them in order of preference:
    click-through license agreements presented by the website. If you
    want to build the image yourself using the recipes contained within
    the BSP tarball, you will still need to create an appropriate
-   :term:`LICENSE_FLAGS_WHITELIST` to match the encumbered recipes in the
+   :term:`LICENSE_FLAGS_ACCEPTED` to match the encumbered recipes in the
    BSP.
 
 .. note::
@@ -1266,12 +1268,12 @@ located in the layer ``poky/meta-yocto-bsp/conf/machine`` and is named
    EXTRA_IMAGEDEPENDS += "u-boot"
 
    DEFAULTTUNE ?= "cortexa8hf-neon"
-   include conf/machine/include/tune-cortexa8.inc
+   include conf/machine/include/arm/armv7a/tune-cortexa8.inc
 
    IMAGE_FSTYPES += "tar.bz2 jffs2 wic wic.bmap"
-   EXTRA_IMAGECMD_jffs2 = "-lnp "
+   EXTRA_IMAGECMD:jffs2 = "-lnp "
    WKS_FILE ?= "beaglebone-yocto.wks"
-   IMAGE_INSTALL_append = " kernel-devicetree kernel-image-zimage"
+   IMAGE_INSTALL:append = " kernel-devicetree kernel-image-zimage"
    do_image_wic[depends] += "mtools-native:do_populate_sysroot dosfstools-native:do_populate_sysroot"
 
    SERIAL_CONSOLES ?= "115200;ttyS0 115200;ttyO0"
@@ -1344,7 +1346,7 @@ Project Reference Manual.
    .. note::
 
       The include statement that pulls in the
-      ``conf/machine/include/tune-cortexa8.inc`` file provides many tuning
+      ``conf/machine/include/arm/tune-cortexa8.inc`` file provides many tuning
       possibilities.
 
 -  :term:`IMAGE_FSTYPES`: The
@@ -1365,7 +1367,7 @@ Project Reference Manual.
 -  :term:`IMAGE_INSTALL`:
    Specifies packages to install into an image through the
    :ref:`image <ref-classes-image>` class. Recipes
-   use the ``IMAGE_INSTALL`` variable.
+   use the :term:`IMAGE_INSTALL` variable.
 
 -  ``do_image_wic[depends]``: A task that is constructed during the
    build. In this example, the task depends on specific tools in order
@@ -1458,29 +1460,29 @@ kernel recipe (i.e. ``linux-yocto_5.0.bb``), which is located in
 
 Following is the contents of the append file::
 
-   KBRANCH_genericx86 = "v5.0/standard/base"
-   KBRANCH_genericx86-64 = "v5.0/standard/base"
-   KBRANCH_edgerouter = "v5.0/standard/edgerouter"
-   KBRANCH_beaglebone-yocto = "v5.0/standard/beaglebone"
+   KBRANCH:genericx86 = "v5.0/standard/base"
+   KBRANCH:genericx86-64 = "v5.0/standard/base"
+   KBRANCH:edgerouter = "v5.0/standard/edgerouter"
+   KBRANCH:beaglebone-yocto = "v5.0/standard/beaglebone"
 
-   KMACHINE_genericx86 ?= "common-pc"
-   KMACHINE_genericx86-64 ?= "common-pc-64"
-   KMACHINE_beaglebone-yocto ?= "beaglebone"
+   KMACHINE:genericx86 ?= "common-pc"
+   KMACHINE:genericx86-64 ?= "common-pc-64"
+   KMACHINE:beaglebone-yocto ?= "beaglebone"
 
-   SRCREV_machine_genericx86 ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
-   SRCREV_machine_genericx86-64 ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
-   SRCREV_machine_edgerouter ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
-   SRCREV_machine_beaglebone-yocto ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
+   SRCREV_machine:genericx86 ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
+   SRCREV_machine:genericx86-64 ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
+   SRCREV_machine:edgerouter ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
+   SRCREV_machine:beaglebone-yocto ?= "3df4aae6074e94e794e27fe7f17451d9353cdf3d"
 
-   COMPATIBLE_MACHINE_genericx86 = "genericx86"
-   COMPATIBLE_MACHINE_genericx86-64 = "genericx86-64"
-   COMPATIBLE_MACHINE_edgerouter = "edgerouter"
-   COMPATIBLE_MACHINE_beaglebone-yocto = "beaglebone-yocto"
+   COMPATIBLE_MACHINE:genericx86 = "genericx86"
+   COMPATIBLE_MACHINE:genericx86-64 = "genericx86-64"
+   COMPATIBLE_MACHINE:edgerouter = "edgerouter"
+   COMPATIBLE_MACHINE:beaglebone-yocto = "beaglebone-yocto"
 
-   LINUX_VERSION_genericx86 = "5.0.3"
-   LINUX_VERSION_genericx86-64 = "5.0.3"
-   LINUX_VERSION_edgerouter = "5.0.3"
-   LINUX_VERSION_beaglebone-yocto = "5.0.3"
+   LINUX_VERSION:genericx86 = "5.0.3"
+   LINUX_VERSION:genericx86-64 = "5.0.3"
+   LINUX_VERSION:edgerouter = "5.0.3"
+   LINUX_VERSION:beaglebone-yocto = "5.0.3"
 
 This particular append file works for all the machines that are
 part of the ``meta-yocto-bsp`` layer. The relevant statements are

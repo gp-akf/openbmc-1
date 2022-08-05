@@ -10,12 +10,15 @@ EXTRA_OEMESON = " \
         -Dtests=disabled \
         "
 
-SYSTEMD_SERVICE_${PN} += " \
+SYSTEMD_SERVICE:${PN} += " \
   dhcp4@.service \
   dhcp6@.service \
   ncsid@.service \
   nic-hostful@.target \
   nic-hostless@.target \
+  update-ra-gw@.service \
+  update-ra-neighbor@.service \
+  update-ra-neighbor@.timer \
   update-static-neighbors@.service \
   update-static-neighbors@.timer \
   "
@@ -26,7 +29,7 @@ DEPENDS += " \
   stdplus \
   "
 
-RDEPENDS_${PN} += " \
+RDEPENDS:${PN} += " \
   bash \
   busybox \
   iputils-arping \

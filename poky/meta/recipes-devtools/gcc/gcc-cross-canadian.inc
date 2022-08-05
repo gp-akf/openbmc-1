@@ -45,6 +45,9 @@ export WINDRES_FOR_TARGET = "${TARGET_PREFIX}windres"
 export ARCH_FLAGS_FOR_TARGET = "--sysroot=${STAGING_DIR_TARGET}"
 
 do_configure () {
+        if [ ! -d ${RECIPE_SYSROOT}/${target_includedir} ]; then
+            mkdir -p ${RECIPE_SYSROOT}/${target_includedir}
+        fi
 	export CC_FOR_BUILD="${BUILD_CC}"
 	export CXX_FOR_BUILD="${BUILD_CXX}"
 	export CFLAGS_FOR_BUILD="${BUILD_CFLAGS}"
@@ -65,7 +68,7 @@ do_compile () {
 
 PACKAGES = "${PN}-dbg ${PN} ${PN}-doc"
 
-FILES_${PN} = "\
+FILES:${PN} = "\
     ${exec_prefix}/bin/* \
     ${libexecdir}/gcc/${TARGET_SYS}/${BINV}/* \
     ${gcclibdir}/${TARGET_SYS}/${BINV}/*.o \
@@ -81,9 +84,9 @@ FILES_${PN} = "\
     ${prefix}/${TARGET_SYS}/lib/* \
     ${prefix}/${TARGET_SYS}${target_includedir}/* \
 "
-INSANE_SKIP_${PN} += "dev-so"
+INSANE_SKIP:${PN} += "dev-so"
 
-FILES_${PN}-doc = "\
+FILES:${PN}-doc = "\
     ${infodir} \
     ${mandir} \
     ${gcclibdir}/${TARGET_SYS}/${BINV}/include/README \
@@ -172,17 +175,14 @@ do_install () {
 }
 
 ELFUTILS = "nativesdk-elfutils"
-DEPENDS += "nativesdk-gmp nativesdk-mpfr nativesdk-libmpc ${ELFUTILS} nativesdk-zlib"
-RDEPENDS_${PN} += "nativesdk-mpfr nativesdk-libmpc ${ELFUTILS}"
+DEPENDS += "nativesdk-gmp nativesdk-mpfr nativesdk-libmpc ${ELFUTILS} nativesdk-zlib nativesdk-zstd"
+RDEPENDS:${PN} += "nativesdk-mpfr nativesdk-libmpc ${ELFUTILS}"
 
 SYSTEMHEADERS = "${target_includedir}/"
 SYSTEMLIBS = "${target_base_libdir}/"
 SYSTEMLIBS1 = "${target_libdir}/"
 
 EXTRA_OECONF += "--enable-poison-system-directories"
-EXTRA_OECONF_remove_elf = "--with-sysroot=/not/exist"
-EXTRA_OECONF_remove_eabi = "--with-sysroot=/not/exist"
-EXTRA_OECONF_append_elf = " --without-headers --with-newlib"
-EXTRA_OECONF_append_eabi = " --without-headers --with-newlib"
+
 # gcc 4.7 needs -isystem
 export ARCH_FLAGS_FOR_TARGET = "--sysroot=${STAGING_DIR_TARGET} -isystem=${target_includedir}"

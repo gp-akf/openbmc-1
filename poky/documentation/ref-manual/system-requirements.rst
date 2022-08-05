@@ -4,7 +4,7 @@
 System Requirements
 *******************
 
-Welcome to the Yocto Project Reference Manual! This manual provides
+Welcome to the Yocto Project Reference Manual. This manual provides
 reference information for the current release of the Yocto Project, and
 is most effectively used after you have an understanding of the basics
 of the Yocto Project. The manual is neither meant to be read as a
@@ -37,30 +37,27 @@ Supported Linux Distributions
 Currently, the Yocto Project is supported on the following
 distributions:
 
--  Ubuntu 16.04 (LTS)
-
 -  Ubuntu 18.04 (LTS)
 
 -  Ubuntu 20.04 (LTS)
 
--  Fedora 30
+-  Fedora 34
 
--  Fedora 31
-
--  Fedora 32
+-  Fedora 35
 
 -  CentOS 7.x
 
 -  CentOS 8.x
 
--  Debian GNU/Linux 8.x (Jessie)
+-  AlmaLinux 8.5
 
 -  Debian GNU/Linux 9.x (Stretch)
 
 -  Debian GNU/Linux 10.x (Buster)
 
--  openSUSE Leap 15.1
+-  Debian GNU/Linux 11.x (Bullseye)
 
+-  OpenSUSE Leap 15.3
 
 .. note::
 
@@ -120,23 +117,23 @@ supported Ubuntu or Debian Linux distribution:
       its own custom ``/usr/include/linux/soundcard.h`` on the Debian
       system. If you run into this situation, try either of these solutions::
 
-         $ sudo apt-get build-dep qemu
-         $ sudo apt-get remove oss4-dev
+         $ sudo apt build-dep qemu
+         $ sudo apt remove oss4-dev
 
    -  For Debian-8, ``python3-git`` and ``pylint3`` are no longer
-      available via ``apt-get``.
+      available via ``apt``.
       ::
 
          $ sudo pip3 install GitPython pylint==1.9.5
 
 -  *Essentials:* Packages needed to build an image on a headless system::
 
-      $ sudo apt-get install &UBUNTU_HOST_PACKAGES_ESSENTIAL;
+      $ sudo apt install &UBUNTU_HOST_PACKAGES_ESSENTIAL;
 
 -  *Documentation:* Packages needed if you are going to build out the
    Yocto Project documentation manuals::
 
-      $ sudo apt-get install make python3-pip
+      $ sudo apt install make python3-pip
       &PIP3_HOST_PACKAGES_DOC;
 
    .. note::
@@ -237,8 +234,8 @@ supported CentOS-8 Linux distribution:
       $ sudo dnf install make python3-pip which
       &PIP3_HOST_PACKAGES_DOC;
 
-Required Git, tar, Python and gcc Versions
-==========================================
+Required Git, tar, Python, make and gcc Versions
+================================================
 
 In order to use the build system, your host development system must meet
 the following version requirements for Git, tar, and Python:
@@ -248,6 +245,8 @@ the following version requirements for Git, tar, and Python:
 -  tar &MIN_TAR_VERSION; or greater
 
 -  Python &MIN_PYTHON_VERSION; or greater
+
+-  GNU make &MIN_MAKE_VERSION; or greater
 
 If your host development system does not meet all these requirements,
 you can resolve this by installing a ``buildtools`` tarball that
@@ -277,7 +276,8 @@ installer and automatically installs the tools for you:
 1. Execute the ``install-buildtools`` script. Here is an example::
 
       $ cd poky
-      $ scripts/install-buildtools --without-extended-buildtools \
+      $ scripts/install-buildtools \
+        --without-extended-buildtools \
         --base-url &YOCTO_DL_URL;/releases/yocto \
         --release yocto-&DISTRO; \
         --installer-version &DISTRO;
@@ -322,7 +322,7 @@ If you would prefer not to use the ``install-buildtools`` script, you can instea
 download and run a pre-built buildtools installer yourself with the following
 steps:
 
-1. Locate and download the ``*.sh`` at &YOCTO_RELEASE_DL_URL;/buildtools/
+1. Locate and download the ``*.sh`` at :yocto_dl:`/releases/yocto/yocto-&DISTRO;/buildtools/`
 
 2. Execute the installation script. Here is an example for the
    traditional installer::

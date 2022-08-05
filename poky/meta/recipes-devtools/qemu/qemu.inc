@@ -4,9 +4,9 @@ machine's processor through dynamic binary translation and provides a set \
 of different hardware and device models for the machine, enabling it to run \
 a variety of guest operating systems"
 HOMEPAGE = "http://qemu.org"
-LICENSE = "GPLv2 & LGPLv2.1"
+LICENSE = "GPL-2.0-only & LGPL-2.1-only"
 
-RDEPENDS_${PN}-ptest = "bash"
+RDEPENDS:${PN}-ptest = "bash"
 
 require qemu-targets.inc
 inherit pkgconfig ptest
@@ -17,53 +17,44 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=441c28d2cf86e15a37fa47e15a72fbac \
 SRC_URI = "https://download.qemu.org/${BPN}-${PV}.tar.xz \
            file://powerpc_rom.bin \
            file://run-ptest \
-           file://0001-qemu-Add-missing-wacom-HID-descriptor.patch \
-           file://0003-qemu-Add-addition-environment-space-to-boot-loader-q.patch \
-           file://0004-qemu-disable-Valgrind.patch \
-           file://0006-chardev-connect-socket-to-a-spawned-command.patch \
-           file://0007-apic-fixup-fallthrough-to-PIC.patch \
-           file://0010-configure-Add-pkg-config-handling-for-libgcrypt.patch \
-           file://0001-Add-enable-disable-udev.patch \
-           file://0001-qemu-Do-not-include-file-if-not-exists.patch \
-           file://mmap2.patch \
-           file://determinism.patch \
-           file://0001-tests-meson.build-use-relative-path-to-refer-to-file.patch \
-           file://0001-configure-fix-detection-of-gdbus-codegen.patch \
-           file://0001-vhost-user-gpu-fix-memory-disclosure-in-virgl_cmd_ge.patch \
-           file://0002-vhost-user-gpu-fix-resource-leak-in-vg_resource_crea.patch \
-           file://0003-vhost-user-gpu-fix-memory-leak-in-vg_resource_attach.patch \
-           file://0004-vhost-user-gpu-fix-memory-leak-while-calling-vg_reso.patch \
-           file://0005-vhost-user-gpu-fix-memory-leak-in-virgl_cmd_resource.patch \
-           file://0006-vhost-user-gpu-fix-memory-leak-in-virgl_resource_att.patch \
-           file://0007-vhost-user-gpu-fix-OOB-write-in-virgl_cmd_get_capset.patch \
-           file://0001-linux-user-Tag-vsx-with-ieee128-fpbits.patch \
+           file://0001-qemu-Add-addition-environment-space-to-boot-loader-q.patch \
+           file://0002-chardev-connect-socket-to-a-spawned-command.patch \
+           file://0003-apic-fixup-fallthrough-to-PIC.patch \
+           file://0004-configure-Add-pkg-config-handling-for-libgcrypt.patch \
+           file://0005-qemu-Do-not-include-file-if-not-exists.patch \
+           file://0006-qemu-Add-some-user-space-mmap-tweaks-to-address-musl.patch \
+           file://0007-qemu-Determinism-fixes.patch \
+           file://0008-tests-meson.build-use-relative-path-to-refer-to-file.patch \
+           file://0009-Define-MAP_SYNC-and-MAP_SHARED_VALIDATE-on-needed-li.patch \
+           file://0010-hw-pvrdma-Protect-against-buggy-or-malicious-guest-d.patch \
            "
 UPSTREAM_CHECK_REGEX = "qemu-(?P<pver>\d+(\.\d+)+)\.tar"
 
-SRC_URI[sha256sum] = "87bc1a471ca24b97e7005711066007d443423d19aacda3d442558ae032fa30b9"
+SRC_URI[sha256sum] = "f6b375c7951f728402798b0baabb2d86478ca53d44cedbefabbe1c46bf46f839"
 
-SRC_URI_append_class-target = " file://cross.patch"
-SRC_URI_append_class-nativesdk = " file://cross.patch"
+SRC_URI:append:class-target = " file://cross.patch"
+SRC_URI:append:class-nativesdk = " file://cross.patch"
 
 # Applies against virglrender < 0.6.0 and not qemu itself
-CVE_CHECK_WHITELIST += "CVE-2017-5957"
+CVE_CHECK_IGNORE += "CVE-2017-5957"
 
 # The VNC server can expose host files uder some circumstances. We don't
 # enable it by default.
-CVE_CHECK_WHITELIST += "CVE-2007-0998"
+CVE_CHECK_IGNORE += "CVE-2007-0998"
 
 # 'The issues identified by this CVE were determined to not constitute a vulnerability.'
 # https://bugzilla.redhat.com/show_bug.cgi?id=1609015#c11
-CVE_CHECK_WHITELIST += "CVE-2018-18438"
+CVE_CHECK_IGNORE += "CVE-2018-18438"
 
-COMPATIBLE_HOST_mipsarchn32 = "null"
-COMPATIBLE_HOST_mipsarchn64 = "null"
+COMPATIBLE_HOST:mipsarchn32 = "null"
+COMPATIBLE_HOST:mipsarchn64 = "null"
+COMPATIBLE_HOST:riscv32 = "null"
 
 # Per https://lists.nongnu.org/archive/html/qemu-devel/2020-09/msg03873.html
 # upstream states qemu doesn't work without optimization
 DEBUG_BUILD = "0"
 
-do_install_append() {
+do_install:append() {
     # Prevent QA warnings about installed ${localstatedir}/run
     if [ -d ${D}${localstatedir}/run ]; then rmdir ${D}${localstatedir}/run; fi
 }
@@ -77,6 +68,9 @@ do_install_ptest() {
 
 	# Strip the paths from the QEMU variable, we can use PATH
 	sed -i -e "s#^QEMU=.*/qemu-#QEMU=qemu-#g" ${D}${PTEST_PATH}/tests/tcg/*.mak
+
+        # Strip compiler flags as they break reproducibility
+        sed -i -e "s,CROSS_CC_GUEST=.*,CROSS_CC_GUEST=," ${D}${PTEST_PATH}/tests/tcg/*.mak
 }
 
 # QEMU_TARGETS is overridable variable
@@ -104,13 +98,11 @@ EXTRA_OECONF = " \
     ${PACKAGECONFIG_CONFARGS} \
     "
 
-export LIBTOOL="${HOST_SYS}-libtool"
-
 B = "${WORKDIR}/build"
 
-#EXTRA_OECONF_append = " --python=${HOSTTOOLS_DIR}/python3"
+#EXTRA_OECONF:append = " --python=${HOSTTOOLS_DIR}/python3"
 
-do_configure_prepend_class-native() {
+do_configure:prepend:class-native() {
 	# Append build host pkg-config paths for native target since the host may provide sdl
 	BHOST_PKGCONFIG_PATH=$(PATH=/usr/bin:/bin pkg-config --variable pc_path pkg-config || echo "")
 	if [ ! -z "$BHOST_PKGCONFIG_PATH" ]; then
@@ -134,7 +126,7 @@ do_install () {
 # This will trigger a MMU access fault in the virtual CPU. With this change,
 # the qemu-mips works fine.
 # IMPORTANT: This piece needs to be removed once the root cause is fixed!
-do_install_append() {
+do_install:append() {
 	if [ -e "${D}/${bindir}/qemu-mips" ]; then
 		create_wrapper ${D}/${bindir}/qemu-mips \
 			QEMU_RESERVED_VA=0x0
@@ -142,25 +134,13 @@ do_install_append() {
 }
 # END of qemu-mips workaround
 
-make_qemu_wrapper() {
-        gdk_pixbuf_module_file=`pkg-config --variable=gdk_pixbuf_cache_file gdk-pixbuf-2.0`
-
-        for tool in `ls ${D}${bindir}/qemu-system-*`; do
-                create_wrapper $tool \
-                        GDK_PIXBUF_MODULE_FILE=$gdk_pixbuf_module_file \
-                        FONTCONFIG_PATH=/etc/fonts \
-                        GTK_THEME=Adwaita
-        done
-}
-
 # Disable kvm/virgl/mesa on targets that do not support it
-PACKAGECONFIG_remove_darwin = "kvm virglrenderer glx gtk+"
-PACKAGECONFIG_remove_mingw32 = "kvm virglrenderer glx gtk+"
+PACKAGECONFIG:remove:darwin = "kvm virglrenderer epoxy gtk+"
+PACKAGECONFIG:remove:mingw32 = "kvm virglrenderer epoxy gtk+"
 
 PACKAGECONFIG[sdl] = "--enable-sdl,--disable-sdl,libsdl2"
 PACKAGECONFIG[virtfs] = "--enable-virtfs --enable-attr --enable-cap-ng,--disable-virtfs,libcap-ng attr,"
 PACKAGECONFIG[aio] = "--enable-linux-aio,--disable-linux-aio,libaio,"
-PACKAGECONFIG[xfs] = "--enable-xfsctl,--disable-xfsctl,xfsprogs,"
 PACKAGECONFIG[xen] = "--enable-xen,--disable-xen,xen-tools,xen-tools-libxenstore xen-tools-libxenctrl xen-tools-libxenguest"
 PACKAGECONFIG[vnc-sasl] = "--enable-vnc --enable-vnc-sasl,--disable-vnc-sasl,cyrus-sasl,"
 PACKAGECONFIG[vnc-jpeg] = "--enable-vnc --enable-vnc-jpeg,--disable-vnc-jpeg,jpeg,"
@@ -176,8 +156,8 @@ PACKAGECONFIG[gcrypt] = "--enable-gcrypt,--disable-gcrypt,libgcrypt,"
 PACKAGECONFIG[nettle] = "--enable-nettle,--disable-nettle,nettle"
 PACKAGECONFIG[libusb] = "--enable-libusb,--disable-libusb,libusb1"
 PACKAGECONFIG[fdt] = "--enable-fdt,--disable-fdt,dtc"
-PACKAGECONFIG[alsa] = "--audio-drv-list='oss alsa',,alsa-lib"
-PACKAGECONFIG[glx] = "--enable-opengl,--disable-opengl,virtual/libgl"
+PACKAGECONFIG[alsa] = "--audio-drv-list=default,,alsa-lib"
+PACKAGECONFIG[epoxy] = "--enable-opengl,--disable-opengl,libepoxy"
 PACKAGECONFIG[lzo] = "--enable-lzo,--disable-lzo,lzo"
 PACKAGECONFIG[numa] = "--enable-numa,--disable-numa,numactl"
 PACKAGECONFIG[gnutls] = "--enable-gnutls,--disable-gnutls,gnutls"
@@ -193,14 +173,24 @@ PACKAGECONFIG[snappy] = "--enable-snappy,--disable-snappy,snappy"
 PACKAGECONFIG[glusterfs] = "--enable-glusterfs,--disable-glusterfs,glusterfs"
 PACKAGECONFIG[xkbcommon] = "--enable-xkbcommon,--disable-xkbcommon,libxkbcommon"
 PACKAGECONFIG[libudev] = "--enable-libudev,--disable-libudev,eudev"
-PACKAGECONFIG[libxml2] = "--enable-libxml2,--disable-libxml2,libxml2"
 PACKAGECONFIG[attr] = "--enable-attr,--disable-attr,attr,"
 PACKAGECONFIG[rbd] = "--enable-rbd,--disable-rbd,ceph,ceph"
 PACKAGECONFIG[vhost] = "--enable-vhost-net,--disable-vhost-net,,"
 PACKAGECONFIG[ust] = "--enable-trace-backend=ust,--enable-trace-backend=nop,lttng-ust,"
 PACKAGECONFIG[pie] = "--enable-pie,--disable-pie,,"
 PACKAGECONFIG[seccomp] = "--enable-seccomp,--disable-seccomp,libseccomp"
+# libnfs is currently provided by meta-kodi
+PACKAGECONFIG[libnfs] = "--enable-libnfs,--disable-libnfs,libnfs"
+PACKAGECONFIG[pmem] = "--enable-libpmem,--disable-libpmem,pmdk"
+PACKAGECONFIG[pulsedio] = "--enable-pa,--disable-pa,pulseaudio"
+PACKAGECONFIG[selinux] = "--enable-selinux,--disable-selinux"
+PACKAGECONFIG[bpf] = "--enable-bpf,--disable-bpf,libbpf"
+PACKAGECONFIG[capstone] = "--enable-capstone,--disable-capstone"
+PACKAGECONFIG[rdma] = "--enable-rdma,--disable-rdma"
+PACKAGECONFIG[vde] = "--enable-vde,--disable-vde"
+PACKAGECONFIG[slirp] = "--enable-slirp=internal,--disable-slirp"
+PACKAGECONFIG[brlapi] = "--enable-brlapi,--disable-brlapi"
 
-INSANE_SKIP_${PN} = "arch"
+INSANE_SKIP:${PN} = "arch"
 
-FILES_${PN} += "${datadir}/icons"
+FILES:${PN} += "${datadir}/icons"

@@ -1,6 +1,6 @@
 SUMMARY = "A standalone native ldconfig build"
 
-LICENSE = "GPLv2+"
+LICENSE = "GPL-2.0-or-later"
 
 LIC_FILES_CHKSUM = "file://${S}/ldconfig.c;endline=17;md5=1d15f20937c055cb5de2329a4c054399"
 
@@ -15,6 +15,7 @@ SRC_URI = "file://ldconfig-native-2.12.1.tar.bz2 \
            file://endian-ness_handling_fix.patch \
            file://add-64-bit-flag-for-ELF64-entries.patch \
            file://no-aux-cache.patch \
+           file://add-riscv-support.patch \
 "
 
 PR = "r2"

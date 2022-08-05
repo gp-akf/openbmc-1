@@ -1,6 +1,6 @@
 SUMMARY = "libgphoto2 allows you to access digital cameras"
 SECTION = "libs"
-LICENSE = "LGPLv2.1"
+LICENSE = "LGPL-2.1-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=0448d3676bc0de00406af227d341a4d1"
 
 DEPENDS = "libtool jpeg virtual/libusb0 libexif zlib libxml2"
@@ -25,7 +25,12 @@ PACKAGECONFIG ??= ""
 PACKAGECONFIG[gd] = ",--without-gdlib,gd"
 PACKAGECONFIG[serial] = "--enable-serial,--disable-serial,lockdev"
 
-do_configure_append() {
+do_configure:prepend() {
+    rm -rf ${S}/libgphoto2_port/auto-m4/*
+    rm -rf ${S}/auto-m4/*
+}
+
+do_configure:append() {
     cp ${STAGING_DATADIR_NATIVE}/gettext/po/Makefile.in.in ${S}/libgphoto2_port/po/
     cd ${S}/libgphoto2_port/
     autoreconf -Wcross --verbose --install --force ${EXTRA_AUTORECONF} $acpaths
@@ -38,18 +43,18 @@ do_configure_append() {
     cd ${S}
 }
 
-do_install_append() {
+do_install:append() {
     install -d ${D}${sysconfdir}/udev/rules.d/
     install -m 0644 ${WORKDIR}/*.rules ${D}${sysconfdir}/udev/rules.d/
 }
 
 PACKAGES =+ "libgphotoport libgphoto2-camlibs"
-FILES_libgphoto2-camlibs = "${libdir}/libgphoto2*/*/*.so*"
-RRECOMMENDS_${PN} = "libgphoto2-camlibs"
+FILES:libgphoto2-camlibs = "${libdir}/libgphoto2*/*/*.so*"
+RRECOMMENDS:${PN} = "libgphoto2-camlibs"
 
-FILES_libgphotoport = "${libdir}/libgphoto2_port.so.*"
+FILES:libgphotoport = "${libdir}/libgphoto2_port.so.*"
 
-FILES_${PN} += "${nonarch_base_libdir}/udev/*"
-FILES_${PN}-dbg += "${libdir}/*/*/.debug"
-FILES_${PN}-dev += "${libdir}/*/*/*.la"
-FILES_${PN}-doc += "${datadir}/libgphoto2_port/0.12.0/vcamera/README.txt"
+FILES:${PN} += "${nonarch_base_libdir}/udev/*"
+FILES:${PN}-dbg += "${libdir}/*/*/.debug"
+FILES:${PN}-dev += "${libdir}/*/*/*.la"
+FILES:${PN}-doc += "${datadir}/libgphoto2_port/0.12.0/vcamera/README.txt"

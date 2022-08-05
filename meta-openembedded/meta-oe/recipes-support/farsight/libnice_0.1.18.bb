@@ -2,7 +2,7 @@ SUMMARY = "Interactive Connectivity Establishment library"
 DESCRIPTION = "Libnice is an implementation of the IETF's draft Interactive Connectivity Establishment standard (ICE)."
 HOMEPAGE = "http://nice.freedesktop.org/wiki/"
 
-LICENSE = "LGPLv2.1 & MPLv1.1"
+LICENSE = "LGPL-2.1-only & MPL-1.1"
 LIC_FILES_CHKSUM = "file://COPYING;md5=9c42325015702feda4f4d2f19a55b767 \
                     file://COPYING.LGPL;md5=2d5025d4aa3495befef8f17206a5b0a1 \
                     file://COPYING.MPL;md5=3c617710e51cdbe0fc00716f056dfb1a \
@@ -25,16 +25,16 @@ GTKDOC_MESON_DISABLE_FLAG = "disabled"
 
 inherit meson gtk-doc gobject-introspection
 
-FILES_${PN} += "${libdir}/gstreamer-1.0/*.so"
-FILES_${PN}-dev += "${libdir}/gstreamer-1.0/*.la"
-FILES_${PN}-staticdev += "${libdir}/gstreamer-1.0/*.a"
-FILES_${PN}-dbg += "${libdir}/gstreamer-1.0/.debug"
+FILES:${PN} += "${libdir}/gstreamer-1.0/*.so"
+FILES:${PN}-dev += "${libdir}/gstreamer-1.0/*.la"
+FILES:${PN}-staticdev += "${libdir}/gstreamer-1.0/*.a"
+FILES:${PN}-dbg += "${libdir}/gstreamer-1.0/.debug"
 
-do_configure_prepend() {
+do_configure:prepend() {
     mkdir ${S}/m4 || true
 }
 
-do_compile_append() {
+do_compile:append() {
     for i in $(find ${B} -name "*.pc") ; do
         sed -i -e s:${STAGING_DIR_TARGET}::g \
                -e s:/${TARGET_SYS}::g \

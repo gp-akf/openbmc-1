@@ -9,13 +9,13 @@ PV = "1.0+git${SRCPV}"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=7becf906c8f8d03c237bad13bc3dac53"
 
-SRC_URI = "git://github.com/openbmc/service-config-manager"
-SRCREV = "1f3813f819f11b27f515891c239113f0b4e60936"
+SRC_URI = "git://github.com/openbmc/service-config-manager;branch=master;protocol=https"
+SRCREV = "2ff3728d4a497f2b3f9e53923ea7320ebe453f5f"
 
 inherit meson pkgconfig systemd
 
 S = "${WORKDIR}/git"
-SYSTEMD_SERVICE_${PN} = "srvcfg-manager.service"
+SYSTEMD_SERVICE:${PN} = "srvcfg-manager.service"
 
 DEPENDS = " \
     boost \

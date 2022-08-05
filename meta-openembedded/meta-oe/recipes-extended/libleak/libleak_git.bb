@@ -3,12 +3,12 @@
 
 SUMMARY = "libleak detects memory leak by hooking memory functions (e.g. malloc) by LD_PRELOAD"
 HOMEPAGE = "https://github.com/WuBingzheng/libleak"
-LICENSE = "GPL-2.0"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://README.md;beginline=18;endline=21;md5=de4f705f12cdedbe452b2c3524572b03"
 
 DEPENDS += "libbacktrace"
 
-SRC_URI = "gitsm://github.com/WuBingzheng/libleak;protocol=https \
+SRC_URI = "gitsm://github.com/WuBingzheng/libleak;protocol=https;branch=master \
            file://0001-respect-environment-variables.patch \
           "
 
@@ -31,8 +31,8 @@ do_install () {
 
 FILES_SOLIBSDEV = ""
 
-FILES_${PN} += "${libdir}/libleak.so"
+FILES:${PN} += "${libdir}/libleak.so"
 
 # libunwind does not support RISCV yet
-COMPATIBLE_HOST_riscv64 = "null"
-COMPATIBLE_HOST_riscv32 = "null"
+COMPATIBLE_HOST:riscv64 = "null"
+COMPATIBLE_HOST:riscv32 = "null"

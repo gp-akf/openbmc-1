@@ -90,7 +90,7 @@ def opkg_query(cmd_output):
 
 def failed_postinsts_abort(pkgs, log_path):
     bb.fatal("""Postinstall scriptlets of %s have failed. If the intention is to defer them to first boot,
-then please place them into pkg_postinst_ontarget_${PN} ().
+then please place them into pkg_postinst_ontarget:${PN} ().
 Deferring to first boot via 'exit 1' is no longer supported.
 Details of the failure are in %s.""" %(pkgs, log_path))
 
@@ -266,7 +266,7 @@ class PackageManager(object, metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def install(self, pkgs, attempt_only=False):
+    def install(self, pkgs, attempt_only=False, hard_depends_only=False):
         """
         Install a list of packages. 'pkgs' is a list object. If 'attempt_only' is
         True, installation failures are ignored.
@@ -321,7 +321,7 @@ class PackageManager(object, metaclass=ABCMeta):
         # TODO don't have sdk here but have a property on the superclass
         # (and respect in install_complementary)
         if sdk:
-            pkgdatadir = self.d.expand("${TMPDIR}/pkgdata/${SDK_SYS}")
+            pkgdatadir = self.d.getVar("PKGDATA_DIR_SDK")
         else:
             pkgdatadir = self.d.getVar("PKGDATA_DIR")
 
@@ -344,10 +344,8 @@ class PackageManager(object, metaclass=ABCMeta):
     def install_complementary(self, globs=None):
         """
         Install complementary packages based upon the list of currently installed
-        packages e.g. locales, *-dev, *-dbg, etc. This will only attempt to install
-        these packages, if they don't exist then no error will occur.  Note: every
-        backend needs to call this function explicitly after the normal package
-        installation
+        packages e.g. locales, *-dev, *-dbg, etc. Note: every backend needs to
+        call this function explicitly after the normal package installation.
         """
         if globs is None:
             globs = self.d.getVar('IMAGE_INSTALL_COMPLEMENTARY')
@@ -398,7 +396,7 @@ class PackageManager(object, metaclass=ABCMeta):
                 bb.note("Installing complementary packages ... %s (skipped already provided packages %s)" % (
                     ' '.join(install_pkgs),
                     ' '.join(skip_pkgs)))
-                self.install(install_pkgs, attempt_only=True)
+                self.install(install_pkgs, hard_depends_only=True)
             except subprocess.CalledProcessError as e:
                 bb.fatal("Could not compute complementary packages list. Command "
                          "'%s' returned %d:\n%s" %

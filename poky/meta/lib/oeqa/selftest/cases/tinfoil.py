@@ -9,7 +9,6 @@ import logging
 import bb.tinfoil
 
 from oeqa.selftest.case import OESelftestTestCase
-from oeqa.utils.commands import runCmd
 
 class TinfoilTests(OESelftestTestCase):
     """ Basic tests for the tinfoil API """
@@ -87,21 +86,20 @@ class TinfoilTests(OESelftestTestCase):
         with bb.tinfoil.Tinfoil() as tinfoil:
             tinfoil.prepare(config_only=True)
 
-            tinfoil.set_event_mask(['bb.event.FilesMatchingFound', 'bb.command.CommandCompleted'])
+            tinfoil.set_event_mask(['bb.event.FilesMatchingFound', 'bb.command.CommandCompleted', 'bb.command.CommandFailed', 'bb.command.CommandExit'])
 
             # Need to drain events otherwise events that were masked may still be in the queue
             while tinfoil.wait_event():
                 pass
 
             pattern = 'conf'
-            res = tinfoil.run_command('findFilesMatchingInDir', pattern, 'conf/machine')
+            res = tinfoil.run_command('testCookerCommandEvent', pattern, handle_events=False)
             self.assertTrue(res)
 
             eventreceived = False
             commandcomplete = False
             start = time.time()
             # Wait for maximum 60s in total so we'd detect spurious heartbeat events for example
-            # The test is IO load sensitive too
             while (not (eventreceived == True and commandcomplete == True) 
                     and (time.time() - start < 60)):
                 # if we received both events (on let's say a good day), we are done  
@@ -111,14 +109,15 @@ class TinfoilTests(OESelftestTestCase):
                         commandcomplete = True
                     elif isinstance(event, bb.event.FilesMatchingFound):
                         self.assertEqual(pattern, event._pattern)
-                        self.assertIn('qemuarm.conf', event._matches)
+                        self.assertIn('A', event._matches)
+                        self.assertIn('B', event._matches)
                         eventreceived = True
                     elif isinstance(event, logging.LogRecord):
                         continue
                     else:
                         self.fail('Unexpected event: %s' % event)
 
-            self.assertTrue(commandcomplete, 'Timed out waiting for CommandCompleted event from bitbake server')
+            self.assertTrue(commandcomplete, 'Timed out waiting for CommandCompleted event from bitbake server (Matching event received: %s)' % str(eventreceived))
             self.assertTrue(eventreceived, 'Did not receive FilesMatchingFound event from bitbake server')
 
     def test_setvariable_clean(self):
@@ -173,8 +172,8 @@ class TinfoilTests(OESelftestTestCase):
             self.assertEqual(value, 'origvalue', 'Variable renamed using config_data.renameVar() does not appear with new name')
             # Test overrides
             tinfoil.config_data.setVar('TESTVAR', 'original')
-            tinfoil.config_data.setVar('TESTVAR_overrideone', 'one')
-            tinfoil.config_data.setVar('TESTVAR_overridetwo', 'two')
+            tinfoil.config_data.setVar('TESTVAR:overrideone', 'one')
+            tinfoil.config_data.setVar('TESTVAR:overridetwo', 'two')
             tinfoil.config_data.appendVar('OVERRIDES', ':overrideone')
             value = tinfoil.config_data.getVar('TESTVAR')
             self.assertEqual(value, 'one', 'Variable overrides not functioning correctly')

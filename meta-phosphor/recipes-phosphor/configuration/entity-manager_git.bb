@@ -2,8 +2,10 @@ SUMMARY = "Entity Manager"
 DESCRIPTION = "Entity Manager provides d-bus configuration data \
 and configures system sensors"
 
-SRC_URI = "git://github.com/openbmc/entity-manager.git file://blocklist.json"
-SRCREV = "07d467bc22ae6de0b5aeea10fa8c179ecca39b2b"
+SRC_URI = "git://github.com/openbmc/entity-manager.git;branch=master;protocol=https \
+           file://blocklist.json \
+          "
+SRCREV = "67003d6e89e4b1acbefedd533a564e343e8f628d"
 PV = "0.1+git${SRCPV}"
 
 LICENSE = "Apache-2.0"
@@ -13,10 +15,12 @@ DEPENDS = "boost \
            dbus \
            nlohmann-json \
            sdbusplus \
-           valijson"
+           valijson \
+           ${PYTHON_PN}-jsonschema-native \
+"
 
 S = "${WORKDIR}/git"
-inherit meson systemd
+inherit pkgconfig meson systemd python3native
 
 EXTRA_OEMESON = "-Dtests=disabled"
 
@@ -29,16 +33,16 @@ EXTRA_ENTITY_MANAGER_PACKAGES = " \
 
 PACKAGE_BEFORE_PN = "${EXTRA_ENTITY_MANAGER_PACKAGES}"
 
-do_install_append() {
+do_install:append() {
     install -D ${WORKDIR}/blocklist.json ${D}${datadir}/${BPN}/blacklist.json
 }
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${datadir}/dbus-1/system-services/xyz.openbmc_project.EntityManager.service \
     "
-FILES_fru-device = "${bindir}/fru-device ${datadir}/${BPN}/blacklist.json"
+FILES:fru-device = "${bindir}/fru-device ${datadir}/${BPN}/blacklist.json"
 
 SYSTEMD_PACKAGES = "${PN} ${EXTRA_ENTITY_MANAGER_PACKAGES}"
-SYSTEMD_SERVICE_${PN} = "xyz.openbmc_project.EntityManager.service"
-SYSTEMD_SERVICE_fru-device = "xyz.openbmc_project.FruDevice.service"
-SYSTEMD_AUTO_ENABLE_fru-device_ibm-power-cpu = "disable"
+SYSTEMD_SERVICE:${PN} = "xyz.openbmc_project.EntityManager.service"
+SYSTEMD_SERVICE:fru-device = "xyz.openbmc_project.FruDevice.service"
+SYSTEMD_AUTO_ENABLE:fru-device_ibm-power-cpu = "disable"

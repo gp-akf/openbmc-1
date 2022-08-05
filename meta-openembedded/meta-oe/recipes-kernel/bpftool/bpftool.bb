@@ -1,7 +1,7 @@
 SUMMARY = "Inspect and manipulate eBPF programs and maps"
 DESCRIPTION = "bpftool is a kernel tool for inspection and simple manipulation \
 of eBPF programs and maps."
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 DEPENDS = "binutils elfutils"
 PROVIDES = "virtual/bpftool"
 
@@ -25,7 +25,7 @@ SECURITY_CFLAGS = ""
 do_configure[depends] += "virtual/kernel:do_shared_workdir"
 
 COMPATIBLE_HOST = "(x86_64).*-linux"
-COMPATIBLE_HOST_libc-musl = 'null'
+COMPATIBLE_HOST:libc-musl = 'null'
 
 do_compile() {
     oe_runmake
@@ -37,7 +37,7 @@ do_install() {
 
 PACKAGE_ARCH = "${MACHINE_ARCH}"
 
-python do_package_prepend() {
+python do_package:prepend() {
     d.setVar('PKGV', d.getVar("KERNEL_VERSION").split("-")[0])
 }
 

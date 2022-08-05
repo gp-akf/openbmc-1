@@ -7,13 +7,13 @@ Storage Name Service (iSNS).  The distribution includes the iSNS server, \
 supporting persisten storage of registrations, isnsadm, a command line \
 utility for managing nodes, and isnsdd, a corresponding discovery daemon."
 HOMEPAGE = "http://github.com/gonzoleeman/open-isns/"
-LICENSE = "GPLv2+ & LGPLv2+"
+LICENSE = "GPL-2.0-or-later & LGPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://COPYING;md5=321bf41f280cf805086dd5a720b37785"
 SECTION = "net"
 
 DEPENDS = "openssl"
 
-SRC_URI = "git://github.com/open-iscsi/open-isns \
+SRC_URI = "git://github.com/open-iscsi/open-isns;branch=master;protocol=https \
            file://0001-isnsd.socket-use-run-instead-of-var-run.patch \
            "
 
@@ -26,7 +26,7 @@ inherit systemd autotools-brokensep update-rc.d
 EXTRA_OECONF = " --prefix=${prefix} --enable-shared"
 EXTRA_OEMAKE += "SYSTEMDDIR=${D}${systemd_unitdir}/system"
 
-do_install_append () {
+do_install:append () {
     oe_runmake INCDIR=${D}${includedir}/libisns/ install_hdrs
     oe_runmake LIBDIR=${D}${libdir} install_lib
 
@@ -35,6 +35,6 @@ do_install_append () {
         ${D}${sysconfdir}/init.d/openisns
 }
 
-FILES_${PN} += "${libdir} ${systemd_unitdir}"
+FILES:${PN} += "${libdir} ${systemd_unitdir}"
 
 INITSCRIPT_NAME = "openisns"

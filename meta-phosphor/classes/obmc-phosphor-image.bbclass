@@ -70,7 +70,12 @@ FEATURE_PACKAGES_obmc-user-mgmt-ldap ?= "packagegroup-obmc-apps-user-mgmt-ldap"
 # FIXME: phosphor-net-ipmi depends on phosphor-ipmi-host !?!? and
 # cannot be built on core-qemu machines because of the dependency
 # tree under phosphor-ipmi-host
-FEATURE_PACKAGES_obmc-net-ipmi_qemuall = ""
+FEATURE_PACKAGES_obmc-net-ipmi:qemuall = ""
+
+# EVB systems do not have a managed system.
+FEATURE_PACKAGES_obmc-system-mgmt:phosphor-evb = ""
+# QEMU systems are like EVBs and do not have a managed system.
+FEATURE_PACKAGES_obmc-system-mgmt:qemuall = ""
 
 # Add new packages to be installed to a package group in
 # packagegroup-obmc-apps, not here.

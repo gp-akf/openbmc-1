@@ -19,10 +19,11 @@ BINCONFIG = "${bindir}/pcap-config"
 
 # Explicitly disable dag support. We don't have recipe for it and if enabled here,
 # configure script poisons the include dirs with /usr/local/include even when the
-# support hasn't been detected.
+# support hasn't been detected. Do the same thing for DPDK.
 EXTRA_OECONF = " \
                  --with-pcap=linux \
                  --without-dag \
+                 --without-dpdk \
                  "
 EXTRA_AUTORECONF += "--exclude=aclocal"
 
@@ -34,7 +35,7 @@ PACKAGECONFIG[dbus] = "--enable-dbus,--disable-dbus,dbus"
 PACKAGECONFIG[ipv6] = "--enable-ipv6,--disable-ipv6,"
 PACKAGECONFIG[libnl] = "--with-libnl,--without-libnl,libnl"
 
-do_configure_prepend () {
+do_configure:prepend () {
     #remove hardcoded references to /usr/include
     sed 's|\([ "^'\''I]\+\)/usr/include/|\1${STAGING_INCDIR}/|g' -i ${S}/configure.ac
 }

@@ -4,8 +4,8 @@ require conf/image-uefi.conf
 
 GRUBPLATFORM = "efi"
 
-DEPENDS_append = " grub-native"
-RDEPENDS_${PN} = "grub-common virtual/grub-bootconf"
+DEPENDS:append = " grub-native"
+RDEPENDS:${PN} = "grub-common virtual-grub-bootconf"
 
 SRC_URI += " \
            file://cfg \
@@ -46,11 +46,21 @@ EXTRA_OECONF += "--enable-efiemu=no"
 
 do_mkimage() {
 	cd ${B}
+
+	GRUB_MKIMAGE_MODULES="${GRUB_BUILDIN}"
+
+	# If 'all' is included in GRUB_BUILDIN we will include all available grub2 modules
+	if [ "${@ bb.utils.contains('GRUB_BUILDIN', 'all', 'True', 'False', d)}" = "True" ]; then
+		bbdebug 1 "Including all available modules"
+		# Get the list of all .mod files in grub-core build directory
+		GRUB_MKIMAGE_MODULES=$(find ${B}/grub-core/ -type f -name "*.mod" -exec basename {} .mod \;)
+	fi
+
 	# Search for the grub.cfg on the local boot media by using the
 	# built in cfg file provided via this recipe
-	grub-mkimage -c ../cfg -p ${EFIDIR} -d ./grub-core/ \
+	grub-mkimage -v -c ../cfg -p ${EFIDIR} -d ./grub-core/ \
 	               -O ${GRUB_TARGET}-efi -o ./${GRUB_IMAGE_PREFIX}${GRUB_IMAGE} \
-	               ${GRUB_BUILDIN}
+	               ${GRUB_MKIMAGE_MODULES}
 }
 
 addtask mkimage before do_install after do_compile
@@ -70,8 +80,12 @@ do_install() {
     install -m 644 ${B}/${GRUB_IMAGE_PREFIX}${GRUB_IMAGE} ${D}${EFI_FILES_PATH}/${GRUB_IMAGE}
 }
 
+# To include all available modules, add 'all' to GRUB_BUILDIN
 GRUB_BUILDIN ?= "boot linux ext2 fat serial part_msdos part_gpt normal \
                  efi_gop iso9660 configfile search loadenv test"
+
+# 'xen_boot' is a module valid only for aarch64
+GRUB_BUILDIN:append:aarch64 = "${@bb.utils.contains('DISTRO_FEATURES', 'xen', ' xen_boot', '', d)}"
 
 do_deploy() {
 	install -m 644 ${B}/${GRUB_IMAGE_PREFIX}${GRUB_IMAGE} ${DEPLOYDIR}
@@ -79,13 +93,13 @@ do_deploy() {
 
 addtask deploy after do_install before do_build
 
-FILES_${PN} = "${libdir}/grub/${GRUB_TARGET}-efi \
+FILES:${PN} = "${libdir}/grub/${GRUB_TARGET}-efi \
                ${datadir}/grub \
                ${EFI_FILES_PATH}/${GRUB_IMAGE} \
                "
 
 # 64-bit binaries are expected for the bootloader with an x32 userland
-INSANE_SKIP_${PN}_append_linux-gnux32 = " arch"
-INSANE_SKIP_${PN}-dbg_append_linux-gnux32 = " arch"
-INSANE_SKIP_${PN}_append_linux-muslx32 = " arch"
-INSANE_SKIP_${PN}-dbg_append_linux-muslx32 = " arch"
+INSANE_SKIP:${PN}:append:linux-gnux32 = " arch"
+INSANE_SKIP:${PN}-dbg:append:linux-gnux32 = " arch"
+INSANE_SKIP:${PN}:append:linux-muslx32 = " arch"
+INSANE_SKIP:${PN}-dbg:append:linux-muslx32 = " arch"

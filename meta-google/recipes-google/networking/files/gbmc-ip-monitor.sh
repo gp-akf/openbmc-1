@@ -44,6 +44,17 @@ gbmc_ip_monitor_generate_init() {
   echo '[INIT]'
 }
 
+GBMC_IP_MONITOR_DEFER_OUTSTANDING=
+gbmc_ip_monitor_defer_() {
+  sleep 1
+  printf '[DEFER]\n' >&$GBMC_IP_MONITOR_DEFER
+}
+gbmc_ip_monitor_defer() {
+  [ -z "$GBMC_IP_MONITOR_DEFER_OUTSTANDING" ] || return 0
+  gbmc_ip_monitor_defer_ &
+  GBMC_IP_MONITOR_DEFER_OUTSTANDING=1
+}
+
 gbmc_ip_monitor_parse_line() {
   local line="$1"
   if [[ "$line" == '[INIT]'* ]]; then
@@ -55,9 +66,11 @@ gbmc_ip_monitor_parse_line() {
     pfx_re='^\[ADDR\](Deleted )?[0-9]+:[[:space:]]*'
     intf_re='([^ ]+)[[:space:]]+'
     fam_re='([^ ]+)[[:space:]]+'
-    addr_re='([^/]+)/[0-9]+[[:space:]]+(brd[[:space:]]+[^ ]+[[:space:]]+)?'
+    addr_re='([^/]+)/[0-9]+[[:space:]]+'
+    metric_re='(metric[[:space:]]+[^ ]+[[:space:]]+)?'
+    brd_re='(brd[[:space:]]+[^ ]+[[:space:]]+)?'
     scope_re='scope[[:space:]]+([^ ]+)[[:space:]]*(.*)'
-    combined_re="${pfx_re}${intf_re}${fam_re}${addr_re}${scope_re}"
+    combined_re="${pfx_re}${intf_re}${fam_re}${addr_re}${metric_re}${brd_re}${scope_re}"
     if ! [[ "$line" =~ ${combined_re} ]]; then
       echo "Failed to parse addr: $line" >&2
       return 1
@@ -68,8 +81,8 @@ gbmc_ip_monitor_parse_line() {
     intf="${BASH_REMATCH[2]}"
     fam="${BASH_REMATCH[3]}"
     ip="${BASH_REMATCH[4]}"
-    scope="${BASH_REMATCH[6]}"
-    flags="${BASH_REMATCH[7]}"
+    scope="${BASH_REMATCH[7]}"
+    flags="${BASH_REMATCH[8]}"
   elif [[ "$line" == '[ROUTE]'* ]]; then
     line="${line#[ROUTE]}"
     change=route
@@ -98,10 +111,15 @@ gbmc_ip_monitor_parse_line() {
     read line || break
     data=($line)
     mac="${data[1]}"
+  elif [[ "$line" == '[DEFER]'* ]]; then
+    GBMC_IP_MONITOR_DEFER_OUTSTANDING=
+    change=defer
   else
     return 2
   fi
 }
+
+return 0 2>/dev/null
 
 cleanup() {
   local st="$?"
@@ -111,7 +129,10 @@ cleanup() {
 }
 trap cleanup HUP INT QUIT ABRT TERM EXIT
 
-return 0 2>/dev/null
+FIFODIR="$(mktemp -d)"
+mkfifo "$FIFODIR"/fifo
+exec {GBMC_IP_MONITOR_DEFER}<>"$FIFODIR"/fifo
+rm -rf "$FIFODIR"
 
 while read line; do
   gbmc_ip_monitor_parse_line "$line" || continue
@@ -119,4 +140,4 @@ while read line; do
   if [ "$change" = 'init' ]; then
     systemd-notify --ready
   fi
-done < <(gbmc_ip_monitor_generate_init; exec ip monitor link addr route label)
+done < <(gbmc_ip_monitor_generate_init; ip monitor link addr route label & cat <&$GBMC_IP_MONITOR_DEFER)

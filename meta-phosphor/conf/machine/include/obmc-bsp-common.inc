@@ -3,7 +3,7 @@
 #@DESCRIPTION: Common machine configuration for OpenBMC chips
 
 KERNEL_CLASSES ?= "kernel-fitimage"
-KERNEL_IMAGETYPES ?= "fitImage"
+KERNEL_IMAGETYPES ?= "fitImage vmlinux"
 
 # Static images. This is the default if no other layout is specified.
 IMAGE_FSTYPES += "${@bb.utils.contains_any('DISTRO_FEATURES', \
@@ -26,4 +26,4 @@ IMAGE_FSTYPES += "${@bb.utils.contains('DISTRO_FEATURES', \
 INITRAMFS_CTYPE ?= "xz"
 INITRAMFS_FSTYPES = "cpio.${INITRAMFS_CTYPE}"
 INITRAMFS_IMAGE = "obmc-phosphor-initramfs"
-INITRAMFS_IMAGE_df-obmc-ubi-fs = ""
+INITRAMFS_IMAGE:df-obmc-ubi-fs = ""

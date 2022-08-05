@@ -4,10 +4,10 @@ Raspberry PI implementation and is quite handy to use standalone"
 HOMEPAGE = "https://github.com/popcornmix/omxplayer"
 SECTION = "console/utils"
 
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=00a27da7ac0f9bcd17320ec29ef4bbf6"
 
-DEPENDS = "libpcre libav virtual/egl boost freetype dbus openssl libssh virtual/libomxil coreutils-native curl-native userland"
+DEPENDS = "alsa-lib libpcre virtual/egl boost freetype dbus openssl libssh virtual/libomxil coreutils-native curl-native userland"
 
 PR = "r5"
 
@@ -22,8 +22,8 @@ SRCREV_default = "f543a0d0e707ab56415f17b0ca6d397394ee8b63"
 # This SRCREV corresponds to the v4.0.3 release of ffmpeg.
 SRCREV_ffmpeg = "fcbd117df3077bad495e99e20f01cf93737bce76"
 
-SRC_URI = "git://github.com/popcornmix/omxplayer.git;protocol=git;branch=master \
-           git://github.com/FFmpeg/FFmpeg;branch=release/4.0;protocol=git;depth=1;name=ffmpeg;destsuffix=git/ffmpeg \
+SRC_URI = "git://github.com/popcornmix/omxplayer.git;protocol=https;branch=master \
+           git://github.com/FFmpeg/FFmpeg;branch=release/4.0;protocol=https;depth=1;name=ffmpeg;destsuffix=git/ffmpeg \
            file://0002-Libraries-and-headers-from-ffmpeg-are-installed-in-u.patch \
            file://0003-Remove-strip-step-in-Makefile.patch \
            file://0004-Add-FFMPEG_EXTRA_CFLAGS-and-FFMPEG_EXTRA_LDFLAGS.patch \
@@ -36,12 +36,12 @@ SRC_URI = "git://github.com/popcornmix/omxplayer.git;protocol=git;branch=master 
            file://0007-Remove-Makefile-hardcoded-arch-tune.patch \
            "
 
-SRC_URI_append = "${@bb.utils.contains("MACHINE_FEATURES", "vc4graphics", " file://0001-Fix-build-with-vc4-driver.patch ", "", d)}"
+SRC_URI:append = "${@bb.utils.contains("MACHINE_FEATURES", "vc4graphics", " file://0001-Fix-build-with-vc4-driver.patch ", "", d)}"
 
 S = "${WORKDIR}/git"
 
 COMPATIBLE_MACHINE = "^rpi$"
-COMPATIBLE_HOST_aarch64 = "null"
+COMPATIBLE_HOST:aarch64 = "null"
 
 def cpu(d):
     for arg in (d.getVar('TUNE_CCARGS') or '').split():
@@ -99,10 +99,10 @@ do_install() {
     install ${S}/fonts/* ${D}${datadir}/fonts/truetype/freefont/
 }
 
-FILES_${PN} = "${bindir}/omxplayer* \
+FILES:${PN} = "${bindir}/omxplayer* \
                ${libdir}/omxplayer/lib*${SOLIBS} \
                ${datadir}/fonts"
 
-FILES_${PN}-dev += "${libdir}/omxplayer/*.so"
+FILES:${PN}-dev += "${libdir}/omxplayer/*.so"
 
-RDEPENDS_${PN} += "bash procps userland"
+RDEPENDS:${PN} += "bash procps userland"

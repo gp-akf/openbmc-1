@@ -19,12 +19,12 @@ SYSROOT_DIRS_NATIVE = " \
     ${sysconfdir} \
     ${localstatedir} \
 "
-SYSROOT_DIRS_append_class-native = " ${SYSROOT_DIRS_NATIVE}"
-SYSROOT_DIRS_append_class-cross = " ${SYSROOT_DIRS_NATIVE}"
-SYSROOT_DIRS_append_class-crosssdk = " ${SYSROOT_DIRS_NATIVE}"
+SYSROOT_DIRS:append:class-native = " ${SYSROOT_DIRS_NATIVE}"
+SYSROOT_DIRS:append:class-cross = " ${SYSROOT_DIRS_NATIVE}"
+SYSROOT_DIRS:append:class-crosssdk = " ${SYSROOT_DIRS_NATIVE}"
 
 # These directories will not be staged in the sysroot
-SYSROOT_DIRS_BLACKLIST = " \
+SYSROOT_DIRS_IGNORE = " \
     ${mandir} \
     ${docdir} \
     ${infodir} \
@@ -49,9 +49,10 @@ sysroot_stage_dir() {
 	fi
 
 	mkdir -p "$dest"
+	rdest=$(realpath --relative-to="$src" "$dest")
 	(
 		cd $src
-		find . -print0 | cpio --null -pdlu $dest
+		find . -print0 | cpio --null -pdlu $rdest
 	)
 }
 
@@ -64,7 +65,7 @@ sysroot_stage_dirs() {
 	done
 
 	# Remove directories we do not care about
-	for dir in ${SYSROOT_DIRS_BLACKLIST}; do
+	for dir in ${SYSROOT_DIRS_IGNORE}; do
 		rm -rf "$to$dir"
 	done
 }
@@ -82,7 +83,7 @@ python sysroot_strip () {
     pn = d.getVar('PN')
     libdir = d.getVar("libdir")
     base_libdir = d.getVar("base_libdir")
-    qa_already_stripped = 'already-stripped' in (d.getVar('INSANE_SKIP_' + pn) or "").split()
+    qa_already_stripped = 'already-stripped' in (d.getVar('INSANE_SKIP:' + pn) or "").split()
     strip_cmd = d.getVar("STRIP")
 
     oe.package.strip_execs(pn, dstdir, strip_cmd, libdir, base_libdir, d,
@@ -103,7 +104,7 @@ python do_populate_sysroot () {
     for f in (d.getVar('SYSROOT_PREPROCESS_FUNCS') or '').split():
         bb.build.exec_func(f, d)
     pn = d.getVar("PN")
-    multiprov = d.getVar("MULTI_PROVIDER_WHITELIST").split()
+    multiprov = d.getVar("BB_MULTI_PROVIDER_ALLOWED").split()
     provdir = d.expand("${SYSROOT_DESTDIR}${base_prefix}/sysroot-providers/")
     bb.utils.mkdirhier(provdir)
     for p in d.getVar("PROVIDES").split():
@@ -115,11 +116,11 @@ python do_populate_sysroot () {
 }
 
 do_populate_sysroot[vardeps] += "${SYSROOT_PREPROCESS_FUNCS}"
-do_populate_sysroot[vardepsexclude] += "MULTI_PROVIDER_WHITELIST"
+do_populate_sysroot[vardepsexclude] += "BB_MULTI_PROVIDER_ALLOWED"
 
 POPULATESYSROOTDEPS = ""
-POPULATESYSROOTDEPS_class-target = "virtual/${MLPREFIX}${TARGET_PREFIX}binutils:do_populate_sysroot"
-POPULATESYSROOTDEPS_class-nativesdk = "virtual/${TARGET_PREFIX}binutils-crosssdk:do_populate_sysroot"
+POPULATESYSROOTDEPS:class-target = "virtual/${MLPREFIX}${HOST_PREFIX}binutils:do_populate_sysroot"
+POPULATESYSROOTDEPS:class-nativesdk = "virtual/${HOST_PREFIX}binutils-crosssdk:do_populate_sysroot"
 do_populate_sysroot[depends] += "${POPULATESYSROOTDEPS}"
 
 SSTATETASKS += "do_populate_sysroot"
@@ -306,6 +307,7 @@ python extend_recipe_sysroot() {
     sstatetasks = d.getVar("SSTATETASKS").split()
     # Add recipe specific tasks referenced by setscene_depvalid()
     sstatetasks.append("do_stash_locale")
+    sstatetasks.append("do_deploy")
 
     def print_dep_tree(deptree):
         data = ""
@@ -350,7 +352,7 @@ python extend_recipe_sysroot() {
     #bb.note(" start is %s" % str(start))
 
     # Direct dependencies should be present and can be depended upon
-    for dep in set(start):
+    for dep in sorted(set(start)):
         if setscenedeps[dep][1] == "do_populate_sysroot":
             if dep not in configuredeps:
                 configuredeps.append(dep)
@@ -402,16 +404,40 @@ python extend_recipe_sysroot() {
     # All files that we're going to be installing, to find conflicts.
     fileset = {}
 
+    invalidate_tasks = set()
     for f in os.listdir(depdir):
+        removed = []
         if not f.endswith(".complete"):
             continue
         f = depdir + "/" + f
         if os.path.islink(f) and not os.path.exists(f):
             bb.note("%s no longer exists, removing from sysroot" % f)
             lnk = os.readlink(f.replace(".complete", ""))
-            sstate_clean_manifest(depdir + "/" + lnk, d, workdir)
+            sstate_clean_manifest(depdir + "/" + lnk, d, canrace=True, prefix=workdir)
             os.unlink(f)
             os.unlink(f.replace(".complete", ""))
+            removed.append(os.path.basename(f.replace(".complete", "")))
+
+        # If we've removed files from the sysroot above, the task that installed them may still
+        # have a stamp file present for the task. This is probably invalid right now but may become
+        # valid again if the user were to change configuration back for example. Since we've removed
+        # the files a task might need, remove the stamp file too to force it to rerun.
+        # YOCTO #14790
+        if removed:
+            for i in glob.glob(depdir + "/index.*"):
+                if i.endswith("." + mytaskname):
+                    continue
+                with open(i, "r") as f:
+                    for l in f:
+                        if l.startswith("TaskDeps:"):
+                            continue
+                        l = l.strip()
+                        if l in removed:
+                            invalidate_tasks.add(i.rsplit(".", 1)[1])
+                            break
+    for t in invalidate_tasks:
+        bb.note("Invalidating stamps for task %s" % t)
+        bb.build.clean_stamp(t, d)
 
     installed = []
     for dep in configuredeps:
@@ -454,7 +480,7 @@ python extend_recipe_sysroot() {
             fl = depdir + "/" + l
             bb.note("Task %s no longer depends on %s, removing from sysroot" % (mytaskname, l))
             lnk = os.readlink(fl)
-            sstate_clean_manifest(depdir + "/" + lnk, d, workdir)
+            sstate_clean_manifest(depdir + "/" + lnk, d, canrace=True, prefix=workdir)
             os.unlink(fl)
             os.unlink(fl + ".complete")
 
@@ -475,7 +501,7 @@ python extend_recipe_sysroot() {
                 continue
             else:
                 bb.note("%s exists in sysroot, but is stale (%s vs. %s), removing." % (c, lnk, c + "." + taskhash))
-                sstate_clean_manifest(depdir + "/" + lnk, d, workdir)
+                sstate_clean_manifest(depdir + "/" + lnk, d, canrace=True, prefix=workdir)
                 os.unlink(depdir + "/" + c)
                 if os.path.lexists(depdir + "/" + c + ".complete"):
                     os.unlink(depdir + "/" + c + ".complete")
@@ -619,7 +645,40 @@ python staging_taskhandler() {
     for task in bbtasks:
         deps = d.getVarFlag(task, "depends")
         if task == "do_configure" or (deps and "populate_sysroot" in deps):
-            d.appendVarFlag(task, "prefuncs", " extend_recipe_sysroot")
+            d.prependVarFlag(task, "prefuncs", "extend_recipe_sysroot ")
 }
 staging_taskhandler[eventmask] = "bb.event.RecipeTaskPreProcess"
 addhandler staging_taskhandler
+
+
+#
+# Target build output, stored in do_populate_sysroot or do_package can depend
+# not only upon direct dependencies but also indirect ones. A good example is
+# linux-libc-headers. The toolchain depends on this but most target recipes do
+# not. There are some headers which are not used by the toolchain build and do
+# not change the toolchain task output, hence the task hashes can change without
+# changing the sysroot output of that recipe yet they can influence others.
+#
+# A specific example is rtc.h which can change rtcwake.c in util-linux but is not
+# used in the glibc or gcc build. To account for this, we need to account for the
+# populate_sysroot hashes in the task output hashes.
+#
+python target_add_sysroot_deps () {
+    current_task = "do_" + d.getVar("BB_CURRENTTASK")
+    if current_task not in ["do_populate_sysroot", "do_package"]:
+        return
+
+    pn = d.getVar("PN")
+    if pn.endswith("-native"):
+        return
+
+    taskdepdata = d.getVar("BB_TASKDEPDATA", False)
+    deps = {}
+    for dep in taskdepdata.values():
+        if dep[1] == "do_populate_sysroot" and not dep[0].endswith(("-native", "-initial")) and "-cross-" not in dep[0] and dep[0] != pn:
+            deps[dep[0]] = dep[6]
+
+    d.setVar("HASHEQUIV_EXTRA_SIGDATA", "\n".join("%s: %s" % (k, deps[k]) for k in sorted(deps.keys())))
+}
+SSTATECREATEFUNCS += "target_add_sysroot_deps"
+

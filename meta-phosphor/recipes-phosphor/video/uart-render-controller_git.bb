@@ -1,7 +1,7 @@
 HOMEPAGE = "https://github.com/jk-ozlabs/uart-render-controller"
-LICENSE = "GPLv2+"
+LICENSE = "GPL-2.0-or-later"
 
-SRC_URI += "git://github.com/jk-ozlabs/uart-render-controller;branch=master"
+SRC_URI += "git://github.com/jk-ozlabs/uart-render-controller;branch=master;protocol=https"
 SRC_URI += "file://uart-render-controller.service"
 
 PR = "r1"
@@ -14,16 +14,16 @@ inherit systemd
 
 DEPENDS += "autoconf-archive-native"
 DEPENDS += "systemd"
-RDEPENDS_${PN} += "fbterm"
+RDEPENDS:${PN} += "fbterm"
 
-SRCREV = "26ac7f7bd6af52db63451d3633bcf1b167eea3d1"
+SRCREV = "08e854a6c425011d029e4e02241afee5060f15eb"
 PV = "0.1+git${SRCPV}"
 
 S = "${WORKDIR}/git"
 
-SYSTEMD_SERVICE_${PN} += "uart-render-controller.service"
+SYSTEMD_SERVICE:${PN} += "uart-render-controller.service"
 
-do_install_append() {
+do_install:append() {
     install -d ${D}${systemd_system_unitdir}
     install -m 0644 ${WORKDIR}/uart-render-controller.service ${D}${systemd_system_unitdir}/
 }

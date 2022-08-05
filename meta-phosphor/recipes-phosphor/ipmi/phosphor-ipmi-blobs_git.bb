@@ -15,12 +15,12 @@ DEPENDS += " \
   "
 
 S = "${WORKDIR}/git"
-SRC_URI = "git://github.com/openbmc/phosphor-ipmi-blobs"
-SRCREV = "f39e668c2b87c9453e0e28d5a8886b81ed80c50e"
+SRC_URI = "git://github.com/openbmc/phosphor-ipmi-blobs;branch=master;protocol=https"
+SRCREV = "fc8fe400482fd06ac5935f613bf17c735482504b"
 
-FILES_${PN} += "${libdir}/ipmid-providers"
+FILES:${PN} += "${libdir}/ipmid-providers"
 
-EXTRA_OEMESON += " \
+EXTRA_OEMESON:append = " \
   -Dtests=disabled \
   -Dexamples=false \
   "

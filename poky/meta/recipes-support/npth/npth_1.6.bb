@@ -2,7 +2,7 @@ SUMMARY = "New GNU Portable Threads library"
 DESCRIPTION = "nPth is a library to provide the GNU Pth API and thus a non-preemptive threads implementation. "
 HOMEPAGE = "https://www.gnu.org/software/pth/"
 SECTION = "libs"
-LICENSE = "LGPLv2+"
+LICENSE = "LGPL-2.0-or-later"
 LIC_FILES_CHKSUM = "\
     file://COPYING.LIB;md5=2caced0b25dfefd4c601d92bd15116de\
     "
@@ -19,10 +19,10 @@ BINCONFIG = "${bindir}/npth-config"
 
 inherit autotools binconfig-disabled multilib_header
 
-FILES_${PN} = "${libdir}/libnpth.so.*"
-FILES_${PN}-dev += "${bindir}/npth-config"
+FILES:${PN} = "${libdir}/libnpth.so.*"
+FILES:${PN}-dev += "${bindir}/npth-config"
 
-do_install_append() {
+do_install:append() {
     oe_multilib_header npth.h
 }
 

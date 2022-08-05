@@ -6,7 +6,7 @@ that are found but fail to compile will exit with an error rather than skip."
 
 HOMEPAGE = "https://metacpan.org/release/Test-Needs"
 SECTION = "libs"
-LICENSE = "Artistic-1.0 | GPL-1.0+"
+LICENSE = "Artistic-1.0 | GPL-1.0-or-later"
 
 CPAN_NAME = "Test-Needs"
 CPAN_AUTHOR = "HAARG"
@@ -24,6 +24,6 @@ S = "${WORKDIR}/${CPAN_NAME}-${PV}"
 
 inherit cpan ptest-perl
 
-RDEPENDS_${PN}-ptest += "perl-module-test-more perl-module-ipc-open3 perl-module-lib perl-module-version"
+RDEPENDS:${PN}-ptest += "perl-module-test-more perl-module-ipc-open3 perl-module-lib perl-module-version"
 
 BBCLASSEXTEND = "native"

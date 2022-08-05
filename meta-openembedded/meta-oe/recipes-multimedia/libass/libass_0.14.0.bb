@@ -7,7 +7,7 @@ LIC_FILES_CHKSUM = "file://COPYING;md5=a42532a0684420bdb15556c3cdd49a75"
 
 DEPENDS = "enca fontconfig freetype libpng fribidi"
 
-SRC_URI = "git://github.com/libass/libass.git"
+SRC_URI = "git://github.com/libass/libass.git;branch=master;protocol=https"
 SRCREV = "73284b676b12b47e17af2ef1b430527299e10c17"
 S = "${WORKDIR}/git"
 
@@ -21,10 +21,10 @@ EXTRA_OECONF = " \
 "
 
 # Disable compiling with ASM for x86 to avoid textrel
-EXTRA_OECONF_append_x86 = " --disable-asm"
+EXTRA_OECONF:append:x86 = " --disable-asm"
 
 PACKAGES =+ "${PN}-tests"
 
-FILES_${PN}-tests = " \
+FILES:${PN}-tests = " \
     ${libdir}/test/test \
 "

@@ -3,7 +3,7 @@ DESCRIPTION = "distcc is a parallel build system that distributes \
 compilation of C/C++/ObjC code across machines on a network."
 HOMEPAGE = "https://github.com/distcc/distcc"
 SECTION = "devel"
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=94d55d512a9ba36caa9b7df079bae19f"
 
 DEPENDS = "avahi binutils"
@@ -13,9 +13,9 @@ PACKAGECONFIG[gtk] = "--with-gtk,--without-gtk --without-gnome,gtk+"
 # use system popt by default
 PACKAGECONFIG[popt] = "--without-included-popt,--with-included-popt,popt"
 
-RRECOMMENDS_${PN}-server = "avahi-daemon"
+RRECOMMENDS:${PN}-server = "avahi-daemon"
 
-SRC_URI = "git://github.com/distcc/distcc.git \
+SRC_URI = "git://github.com/distcc/distcc.git;branch=master;protocol=https \
            file://default \
            file://distcc \
            file://distcc.service \
@@ -33,7 +33,7 @@ EXTRA_OECONF += "--disable-Werror PYTHON='' --disable-pump-mode"
 PACKAGE_BEFORE_PN = "${PN}-distmon-gnome ${PN}-server"
 
 USERADD_PACKAGES = "${PN}-server"
-USERADD_PARAM_${PN}-server = "--system \
+USERADD_PARAM:${PN}-server = "--system \
                        --home /dev/null \
                        --no-create-home \
                        --gid nogroup \
@@ -43,7 +43,7 @@ UPDATERCPN = "${PN}-server"
 INITSCRIPT_NAME = "distcc"
 
 SYSTEMD_PACKAGES = "${PN}-server"
-SYSTEMD_SERVICE_${PN}-server = "distcc.service"
+SYSTEMD_SERVICE:${PN}-server = "distcc.service"
 
 do_install() {
     # Improve reproducibility: compress w/o timestamps
@@ -52,15 +52,15 @@ do_install() {
     install -d ${D}${sysconfdir}/default
     install -m 0755 ${WORKDIR}/distcc ${D}${sysconfdir}/init.d/
     install -m 0755 ${WORKDIR}/default ${D}${sysconfdir}/default/distcc
-    install -d ${D}${systemd_unitdir}/system/
-    install -m 0644 ${WORKDIR}/distcc.service ${D}${systemd_unitdir}/system
-    sed -i -e 's,@BINDIR@,${bindir},g' ${D}${systemd_unitdir}/system/distcc.service
+    install -d ${D}${systemd_system_unitdir}/
+    install -m 0644 ${WORKDIR}/distcc.service ${D}${systemd_system_unitdir}
+    sed -i -e 's,@BINDIR@,${bindir},g' ${D}${systemd_system_unitdir}/distcc.service
 }
 
-FILES_${PN}-server = "${sysconfdir} \
+FILES:${PN}-server = "${sysconfdir} \
                       ${bindir}/distccd \
                       ${sbindir}"
-FILES_${PN}-distmon-gnome = "${bindir}/distccmon-gnome \
+FILES:${PN}-distmon-gnome = "${bindir}/distccmon-gnome \
                              ${datadir}/applications \
                              ${datadir}/pixmaps"
 

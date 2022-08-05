@@ -1,9 +1,9 @@
 PR = "r1"
 PV = "0.1+git${SRCPV}"
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=4325afd396febcb659c36b49533135d4"
 
-SRC_URI = "git://github.com/mstpd/mstpd"
+SRC_URI = "git://github.com/mstpd/mstpd;branch=master;protocol=https"
 SRCREV = "973c403c79f3d419d9e93a242766ddf0099d1299"
 S = "${WORKDIR}/git"
 
@@ -13,12 +13,12 @@ SRC_URI += "file://mstpd.service"
 inherit autotools pkgconfig systemd
 
 PACKAGES =+ "${PN}-mstpd"
-FILES_${PN}-mstpd = "${sbindir}/mstpd ${sbindir}/mstpctl /sbin/bridge-stp"
+FILES:${PN}-mstpd = "${sbindir}/mstpd ${sbindir}/mstpctl /sbin/bridge-stp"
 
 SYSTEMD_PACKAGES = "${PN}-mstpd"
-SYSTEMD_SERVICE_${PN}-mstpd = "mstpd.service"
+SYSTEMD_SERVICE:${PN}-mstpd = "mstpd.service"
 
-do_install_append() {
+do_install:append() {
   rm -r ${D}${libexecdir}
 
   install -d -m 0755 ${D}/sbin

@@ -19,10 +19,14 @@
 
 inherit python3native
 
-DEPENDS_prepend = "nodejs-native "
-RDEPENDS_${PN}_append_class-target = " nodejs"
+DEPENDS:prepend = "nodejs-native nodejs-oe-cache-native "
+RDEPENDS:${PN}:append:class-target = " nodejs"
+
+EXTRA_OENPM = ""
 
 NPM_INSTALL_DEV ?= "0"
+
+NPM_NODEDIR ?= "${RECIPE_SYSROOT_NATIVE}${prefix_native}"
 
 def npm_target_arch_map(target_arch):
     """Maps arch names to npm arch names"""
@@ -42,6 +46,7 @@ NPM_ARCH ?= "${@npm_target_arch_map(d.getVar("TARGET_ARCH"))}"
 NPM_PACKAGE = "${WORKDIR}/npm-package"
 NPM_CACHE = "${WORKDIR}/npm-cache"
 NPM_BUILD = "${WORKDIR}/npm-build"
+NPM_REGISTRY = "${WORKDIR}/npm-registry"
 
 def npm_global_configs(d):
     """Get the npm global configuration"""
@@ -49,17 +54,42 @@ def npm_global_configs(d):
     # Ensure no network access is done
     configs.append(("offline", "true"))
     configs.append(("proxy", "http://invalid"))
+    configs.append(("funds", False))
+    configs.append(("audit", False))
     # Configure the cache directory
     configs.append(("cache", d.getVar("NPM_CACHE")))
     return configs
 
+## 'npm pack' runs 'prepare' and 'prepack' scripts. Support for
+## 'ignore-scripts' which prevents this behavior has been removed
+## from nodejs 16.  Use simple 'tar' instead of.
 def npm_pack(env, srcdir, workdir):
-    """Run 'npm pack' on a specified directory"""
-    import shlex
-    cmd = "npm pack %s" % shlex.quote(srcdir)
-    configs = [("ignore-scripts", "true")]
-    tarball = env.run(cmd, configs=configs, workdir=workdir).strip("\n")
-    return os.path.join(workdir, tarball)
+    """Emulate 'npm pack' on a specified directory"""
+    import subprocess
+    import os
+    import json
+
+    src = os.path.join(srcdir, 'package.json')
+    with open(src) as f:
+        j = json.load(f)
+
+    # base does not really matter and is for documentation purposes
+    # only.  But the 'version' part must exist because other parts of
+    # the bbclass rely on it.
+    base = j['name'].split('/')[-1]
+    tarball = os.path.join(workdir, "%s-%s.tgz" % (base, j['version']));
+
+    # TODO: real 'npm pack' does not include directories while 'tar'
+    # does.  But this does not seem to matter...
+    subprocess.run(['tar', 'czf', tarball,
+                    '--exclude', './node-modules',
+                    '--exclude-vcs',
+                    '--transform', 's,^\./,package/,',
+                    '--mtime', '1985-10-26T08:15:00.000Z',
+                    '.'],
+                   check = True, cwd = srcdir)
+
+    return (tarball, j)
 
 python npm_do_configure() {
     """
@@ -77,31 +107,29 @@ python npm_do_configure() {
     import json
     import re
     import shlex
+    import stat
     import tempfile
     from bb.fetch2.npm import NpmEnvironment
     from bb.fetch2.npm import npm_unpack
     from bb.fetch2.npmsw import foreach_dependencies
     from bb.progress import OutOfProgressHandler
+    from oe.npm_registry import NpmRegistry
 
     bb.utils.remove(d.getVar("NPM_CACHE"), recurse=True)
     bb.utils.remove(d.getVar("NPM_PACKAGE"), recurse=True)
 
     env = NpmEnvironment(d, configs=npm_global_configs(d))
+    registry = NpmRegistry(d.getVar('NPM_REGISTRY'), d.getVar('NPM_CACHE'))
 
-    def _npm_cache_add(tarball):
-        """Run 'npm cache add' for a specified tarball"""
-        cmd = "npm cache add %s" % shlex.quote(tarball)
-        env.run(cmd)
+    def _npm_cache_add(tarball, pkg):
+        """Add tarball to local registry and register it in the
+           cache"""
+        registry.add_pkg(tarball, pkg)
 
     def _npm_integrity(tarball):
         """Return the npm integrity of a specified tarball"""
         sha512 = bb.utils.sha512_file(tarball)
         return "sha512-" + base64.b64encode(bytes.fromhex(sha512)).decode()
-
-    def _npm_version(tarball):
-        """Return the version of a specified tarball"""
-        regex = r"-(\d+\.\d+\.\d+(-.*)?(\+.*)?)\.tgz"
-        return re.search(regex, tarball).group(1)
 
     def _npmsw_dependency_dict(orig, deptree):
         """
@@ -159,11 +187,11 @@ python npm_do_configure() {
         with tempfile.TemporaryDirectory() as tmpdir:
             # Add the dependency to the npm cache
             destdir = os.path.join(d.getVar("S"), destsuffix)
-            tarball = npm_pack(env, destdir, tmpdir)
-            _npm_cache_add(tarball)
+            (tarball, pkg) = npm_pack(env, destdir, tmpdir)
+            _npm_cache_add(tarball, pkg)
             # Add its signature to the cached shrinkwrap
             dep = _npmsw_dependency_dict(cached_shrinkwrap, deptree)
-            dep["version"] = _npm_version(tarball)
+            dep["version"] = pkg['version']
             dep["integrity"] = _npm_integrity(tarball)
             if params.get("dev", False):
                 dep["dev"] = True
@@ -180,7 +208,7 @@ python npm_do_configure() {
 
     # Configure the main package
     with tempfile.TemporaryDirectory() as tmpdir:
-        tarball = npm_pack(env, d.getVar("S"), tmpdir)
+        (tarball, _) = npm_pack(env, d.getVar("S"), tmpdir)
         npm_unpack(tarball, d.getVar("NPM_PACKAGE"), d)
 
     # Configure the cached manifest file and cached shrinkwrap file
@@ -198,6 +226,7 @@ python npm_do_configure() {
         if has_shrinkwrap_file:
             _update_manifest("devDependencies")
 
+    os.chmod(cached_manifest_file, os.stat(cached_manifest_file).st_mode | stat.S_IWUSR)
     with open(cached_manifest_file, "w") as f:
         json.dump(cached_manifest, f, indent=2)
 
@@ -224,15 +253,11 @@ python npm_do_compile() {
 
     bb.utils.remove(d.getVar("NPM_BUILD"), recurse=True)
 
-    env = NpmEnvironment(d, configs=npm_global_configs(d))
-
-    dev = bb.utils.to_boolean(d.getVar("NPM_INSTALL_DEV"), False)
-
     with tempfile.TemporaryDirectory() as tmpdir:
         args = []
-        configs = []
+        configs = npm_global_configs(d)
 
-        if dev:
+        if bb.utils.to_boolean(d.getVar("NPM_INSTALL_DEV"), False):
             configs.append(("also", "development"))
         else:
             configs.append(("only", "production"))
@@ -247,20 +272,19 @@ python npm_do_compile() {
         # Add node-gyp configuration
         configs.append(("arch", d.getVar("NPM_ARCH")))
         configs.append(("release", "true"))
-        nodedir = d.getVar("NPM_NODEDIR")
-        if not nodedir:
-            sysroot = d.getVar("RECIPE_SYSROOT_NATIVE")
-            nodedir = os.path.join(sysroot, d.getVar("prefix_native").strip("/"))
-        configs.append(("nodedir", nodedir))
+        configs.append(("nodedir", d.getVar("NPM_NODEDIR")))
         configs.append(("python", d.getVar("PYTHON")))
+
+        env = NpmEnvironment(d, configs)
 
         # Add node-pre-gyp configuration
         args.append(("target_arch", d.getVar("NPM_ARCH")))
         args.append(("build-from-source", "true"))
 
         # Pack and install the main package
-        tarball = npm_pack(env, d.getVar("NPM_PACKAGE"), tmpdir)
-        env.run("npm install %s" % shlex.quote(tarball), args=args, configs=configs)
+        (tarball, _) = npm_pack(env, d.getVar("NPM_PACKAGE"), tmpdir)
+        cmd = "npm install %s %s" % (shlex.quote(tarball), d.getVar("EXTRA_OENPM"))
+        env.run(cmd, args=args)
 }
 
 npm_do_install() {
@@ -306,13 +330,9 @@ npm_do_install() {
     # Remove the shrinkwrap file which does not need to be packed
     rm -f ${D}/${nonarch_libdir}/node_modules/*/npm-shrinkwrap.json
     rm -f ${D}/${nonarch_libdir}/node_modules/@*/*/npm-shrinkwrap.json
-
-    # node(1) is using /usr/lib/node as default include directory and npm(1) is
-    # using /usr/lib/node_modules as install directory. Let's make both happy.
-    ln -fs node_modules ${D}/${nonarch_libdir}/node
 }
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${bindir} \
     ${nonarch_libdir} \
 "

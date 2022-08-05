@@ -15,7 +15,7 @@ The following changes have been made to BitBake:
    functions (e.g. ``def funcname:``) in the metadata for tab
    indentation. If found, BitBake produces a warning.
 
--  Bitbake now checks
+-  BitBake now checks
    :term:`BBFILE_COLLECTIONS` for duplicate
    entries and triggers an error if any are found.
 
@@ -72,7 +72,7 @@ License Value Corrections
 The following corrections have been made to the
 :term:`LICENSE` values set by recipes:
 
-- *socat*: Corrected ``LICENSE`` to be "GPLv2" rather than "GPLv2+".
+- *socat*: Corrected :term:`LICENSE` to be "GPLv2" rather than "GPLv2+".
 - *libgfortran*: Set license to "GPL-3.0-with-GCC-exception".
 - *elfutils*: Removed "Elfutils-Exception" and set to "GPLv2" for shared libraries
 
@@ -87,8 +87,8 @@ This section provides information about packaging changes.
    ``bind-utils`` package.
 
 -  Debug split: The default debug split has been changed to create
-   separate source packages (i.e. package_name\ ``-dbg`` and
-   package_name\ ``-src``). If you are currently using ``dbg-pkgs`` in
+   separate source packages (i.e. ``package_name-dbg`` and
+   ``package_name-src``). If you are currently using ``dbg-pkgs`` in
    :term:`IMAGE_FEATURES` to bring in debug
    symbols and you still need the sources, you must now also add
    ``src-pkgs`` to :term:`IMAGE_FEATURES`. Source packages remain in the

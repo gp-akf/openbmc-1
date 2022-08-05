@@ -23,7 +23,7 @@ INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
 SSTATE_SCAN_CMD = "true"
 
 export GOROOT_OVERRIDE = "1"
-export GOTMPDIR ?= "${WORKDIR}/go-tmp"
+export GOTMPDIR ?= "${WORKDIR}/build-tmp"
 GOTMPDIR[vardepvalue] = ""
 export CGO_ENABLED = "1"
 
@@ -37,6 +37,8 @@ export GO386 ?= "${TARGET_GO386}"
 export GOMIPS ?= "${TARGET_GOMIPS}"
 export GOROOT_FINAL ?= "${libdir}/go"
 
-do_compile_prepend() {
+export GODEBUG = "gocachehash=1"
+
+do_compile:prepend() {
 	BUILD_CC=${BUILD_CC}
 }

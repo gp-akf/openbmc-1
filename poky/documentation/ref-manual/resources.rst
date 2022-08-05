@@ -64,22 +64,22 @@ and announcements. To subscribe to one of the following mailing lists,
 click on the appropriate URL in the following list and follow the
 instructions:
 
--  :yocto_lists:`/g/yocto` - General Yocto Project
+-  :yocto_lists:`/g/yocto` --- general Yocto Project
    discussion mailing list.
 
--  :oe_lists:`/g/openembedded-core` - Discussion mailing
+-  :oe_lists:`/g/openembedded-core` --- discussion mailing
    list about OpenEmbedded-Core (the core metadata).
 
--  :oe_lists:`/g/openembedded-devel` - Discussion
+-  :oe_lists:`/g/openembedded-devel` --- discussion
    mailing list about OpenEmbedded.
 
--  :oe_lists:`/g/bitbake-devel` - Discussion mailing
+-  :oe_lists:`/g/bitbake-devel` --- discussion mailing
    list about the :term:`BitBake` build tool.
 
--  :yocto_lists:`/g/poky` - Discussion mailing list
+-  :yocto_lists:`/g/poky` --- discussion mailing list
    about :term:`Poky`.
 
--  :yocto_lists:`/g/yocto-announce` - Mailing list to
+-  :yocto_lists:`/g/yocto-announce` --- mailing list to
    receive official Yocto Project release and milestone announcements.
 
 For more Yocto Project-related mailing lists, see the
@@ -90,12 +90,12 @@ For more Yocto Project-related mailing lists, see the
 Internet Relay Chat (IRC)
 =========================
 
-Two IRC channels on Freenode are available for the Yocto Project and
-Poky discussions:
+Two IRC channels on `Libera Chat <https://libera.chat/>`__
+are available for the Yocto Project and OpenEmbedded discussions:
 
 -  ``#yocto``
 
--  ``#poky``
+-  ``#oe``
 
 .. _resources-links-and-related-documentation:
 
@@ -187,9 +187,10 @@ Here is a list of resources you might find helpful:
    implementation of Bugzilla for logging and tracking Yocto Project
    defects.
 
--  *Internet Relay Chat (IRC):* Two IRC channels on Freenode are
-   available for Yocto Project and Poky discussions: ``#yocto`` and
-   ``#poky``, respectively.
+-  *Internet Relay Chat (IRC):* Two IRC channels on
+   `Libera Chat <https://libera.chat/>`__ are
+   available for Yocto Project and OpenEmbeddded discussions: ``#yocto`` and
+   ``#oe``, respectively.
 
 -  `Quick EMUlator (QEMU) <https://wiki.qemu.org/Index.html>`__\ *:* An
    open-source machine emulator and virtualizer.

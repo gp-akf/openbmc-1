@@ -7,17 +7,10 @@ LIC_FILES_CHKSUM = "file://LICENCE;md5=6e7d24cf1c949887ee9447a1e2a4a24c"
 # gtk support includes a bunch of x11 headers
 REQUIRED_DISTRO_FEATURES = "x11"
 
-SRC_URI = "git://git.tartarus.org/simon/puzzles.git;branch=main \
-           file://fix-compiling-failure-with-option-g-O.patch \
-           file://0001-palisade-Fix-warnings-with-clang-on-arm.patch \
-           file://0001-pattern.c-Change-string-lenght-parameter-to-be-size_.patch \
-           file://fix-ki-uninitialized.patch \
-           file://0001-malloc-Check-for-excessive-values-to-malloc.patch \
-           file://0001-map-Fix-stringop-overflow-warning.patch \
-           "
+SRC_URI = "git://git.tartarus.org/simon/puzzles.git;branch=main"
 
 UPSTREAM_CHECK_COMMITS = "1"
-SRCREV = "8f3413c31ffd43c4ebde40894ac1b2f7cdf222c3"
+SRCREV = "387d323dd8d579db2c90b499b3b19f746cbdbce5"
 PE = "2"
 PV = "0.0+git${SRCPV}"
 
@@ -27,9 +20,10 @@ inherit cmake features_check pkgconfig
 
 DEPENDS += "gtk+3"
 
-do_install_append () {
+do_install:append () {
     # net conflicts with Samba, so rename it
     mv ${D}${bindir}/net ${D}${bindir}/puzzles-net
+    rm ${D}/${datadir}/applications/net.desktop
 
     # Create desktop shortcuts
     install -d ${D}/${datadir}/applications/

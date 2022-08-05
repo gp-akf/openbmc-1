@@ -7,20 +7,20 @@ SECTION = "libs"
 LICENSE = "Apache-2.0"
 LIC_FILES_CHKSUM = "file://LICENSE;md5=df52c6edb7adc22e533b2bacc3bd3915"
 
-PV = "20210324+git${SRCPV}"
-SRCREV = "e1d388e7e74803050423d035e4374131b9b57919"
-BRANCH = "lts_2021_03_24"
-SRC_URI = "git://github.com/abseil/abseil-cpp;branch=${BRANCH}         \
+PV = "20220623.0"
+SRCREV = "273292d1cfc0a94a65082ee350509af1d113344d"
+BRANCH = "lts_2022_06_23"
+SRC_URI = "git://github.com/abseil/abseil-cpp;branch=${BRANCH};protocol=https \
            file://0001-absl-always-use-asm-sgidefs.h.patch             \
            file://0002-Remove-maes-option-from-cross-compilation.patch \
            file://abseil-ppc-fixes.patch \
-           file://0001-Export-of-internal-Abseil-changes.patch \
+           file://0003-Remove-neon-option-from-cross-compilation.patch \
           "
 
 S = "${WORKDIR}/git"
 
-ASNEEDED_class-native = ""
-ASNEEDED_class-nativesdk = ""
+ASNEEDED:class-native = ""
+ASNEEDED:class-nativesdk = ""
 
 inherit cmake
 
@@ -31,4 +31,4 @@ EXTRA_OECMAKE = "-DBUILD_SHARED_LIBS=ON \
 
 BBCLASSEXTEND = "native nativesdk"
 
-FILES_${PN}-dev += "${includedir} ${libdir}/cmake ${libdir}/pkgconfig"
+FILES:${PN}-dev += "${includedir} ${libdir}/cmake ${libdir}/pkgconfig"

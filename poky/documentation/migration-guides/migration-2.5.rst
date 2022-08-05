@@ -137,7 +137,7 @@ The following are BitBake changes:
 -  Several explicit "run this task for all recipes in the dependency
    tree" tasks have been removed (e.g. ``fetchall``, ``checkuriall``,
    and the ``*all`` tasks provided by the ``distrodata`` and
-   ``archiver`` classes). There is a BitBake option to complete this for
+   :ref:`archiver <ref-classes-archiver>` classes). There is a BitBake option to complete this for
    any arbitrary task. For example::
 
       bitbake <target> -c fetchall
@@ -187,7 +187,7 @@ Miscellaneous Changes
 
 The following are additional changes:
 
--  The ``kernel`` class supports building packages for multiple kernels.
+-  The :ref:`kernel <ref-classes-kernel>` class supports building packages for multiple kernels.
    If your kernel recipe or ``.bbappend`` file mentions packaging at
    all, you should replace references to the kernel in package names
    with ``${KERNEL_PACKAGE_NAME}``. For example, if you disable
@@ -195,7 +195,7 @@ The following are additional changes:
    ``RDEPENDS_kernel-base = ""`` you can avoid warnings using
    ``RDEPENDS_${KERNEL_PACKAGE_NAME}-base = ""`` instead.
 
--  The ``buildhistory`` class commits changes to the repository by
+-  The :ref:`buildhistory <ref-classes-buildhistory>` class commits changes to the repository by
    default so you no longer need to set ``BUILDHISTORY_COMMIT = "1"``.
    If you want to disable commits you need to set
    ``BUILDHISTORY_COMMIT = "0"`` in your configuration.
@@ -207,7 +207,7 @@ The following are additional changes:
    maintains a full-featured BSP in the ``meta-ti`` layer. This rename
    avoids the previous name clash that existed between the two BSPs.
 
--  The ``update-alternatives`` class no longer works with SysV ``init``
+-  The :ref:`update-alternatives <ref-classes-update-alternatives>` class no longer works with SysV ``init``
    scripts because this usage has been problematic. Also, the
    ``sysklogd`` recipe no longer uses ``update-alternatives`` because it
    is incompatible with other implementations.
@@ -278,16 +278,16 @@ The following are additional changes:
    performance and compression. In order to build a live image with
    squashfs+lz4 compression enabled you should now set
    ``LIVE_ROOTFS_TYPE = "squashfs-lz4"`` and ensure that ``live`` is in
-   ``IMAGE_FSTYPES``.
+   :term:`IMAGE_FSTYPES`.
 
 -  Recipes with an unconditional dependency on ``libpam`` are only
    buildable with ``pam`` in :term:`DISTRO_FEATURES`. If the dependency is
    truly optional then it is recommended that the dependency be
-   conditional upon ``pam`` being in ``DISTRO_FEATURES``.
+   conditional upon ``pam`` being in :term:`DISTRO_FEATURES`.
 
 -  For EFI-based machines, the bootloader (``grub-efi`` by default) is
    installed into the image at /boot. Wic can be used to split the
-   bootloader into separate boot and rootfs partitions if necessary.
+   bootloader into separate boot and root filesystem partitions if necessary.
 
 -  Patches whose context does not match exactly (i.e. where patch
    reports "fuzz" when applying) will generate a warning. For an example

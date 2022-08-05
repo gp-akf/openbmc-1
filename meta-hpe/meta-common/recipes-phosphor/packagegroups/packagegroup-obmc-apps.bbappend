@@ -1,10 +1,10 @@
-RDEPENDS_${PN}-logging += "phosphor-logging"
-RDEPENDS_${PN}-extras += " bmcweb \
-                           phosphor-webui \
+RDEPENDS:${PN}-logging += "phosphor-logging"
+RDEPENDS:${PN}-extras += " bmcweb \
+                           webui-vue \
                            phosphor-image-signing \
                            phosphor-pid-control \
 "
 
-RDEPENDS_${PN}-fan-control = " \
+RDEPENDS:${PN}-fan-control = " \
          ${VIRTUAL-RUNTIME_obmc-fan-control} \
          "

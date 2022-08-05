@@ -2,15 +2,15 @@ UNINATIVE_LOADER ?= "${UNINATIVE_STAGING_DIR}-uninative/${BUILD_ARCH}-linux/lib/
 UNINATIVE_STAGING_DIR ?= "${STAGING_DIR}"
 
 UNINATIVE_URL ?= "unset"
-UNINATIVE_TARBALL ?= "${BUILD_ARCH}-nativesdk-libc.tar.xz"
+UNINATIVE_TARBALL ?= "${BUILD_ARCH}-nativesdk-libc-${UNINATIVE_VERSION}.tar.xz"
 # Example checksums
 #UNINATIVE_CHECKSUM[aarch64] = "dead"
 #UNINATIVE_CHECKSUM[i686] = "dead"
 #UNINATIVE_CHECKSUM[x86_64] = "dead"
 UNINATIVE_DLDIR ?= "${DL_DIR}/uninative/"
 
-# Enabling uninative will change the following variables so they need to go the parsing white list to prevent multiple recipe parsing
-BB_HASHCONFIG_WHITELIST += "NATIVELSBSTRING SSTATEPOSTUNPACKFUNCS BUILD_LDFLAGS"
+# Enabling uninative will change the following variables so they need to go the parsing ignored variables list to prevent multiple recipe parsing
+BB_HASHCONFIG_IGNORE_VARS += "NATIVELSBSTRING SSTATEPOSTUNPACKFUNCS BUILD_LDFLAGS"
 
 addhandler uninative_event_fetchloader
 uninative_event_fetchloader[eventmask] = "bb.event.BuildStarted"
@@ -100,7 +100,7 @@ ${UNINATIVE_STAGING_DIR}-uninative/relocate_sdk.py \
   ${UNINATIVE_LOADER} \
   ${UNINATIVE_LOADER} \
   ${UNINATIVE_STAGING_DIR}-uninative/${BUILD_ARCH}-linux/${bindir_native}/patchelf-uninative \
-  ${UNINATIVE_STAGING_DIR}-uninative/${BUILD_ARCH}-linux${base_libdir_native}/libc*.so" % chksum)
+  ${UNINATIVE_STAGING_DIR}-uninative/${BUILD_ARCH}-linux${base_libdir_native}/libc*.so*" % chksum)
         subprocess.check_output(cmd, shell=True)
 
         with open(loaderchksum, "w") as f:

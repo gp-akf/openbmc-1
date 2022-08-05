@@ -3,13 +3,13 @@ DESCRIPTION = "Open Source Tripwire® software is a security and data \
 integrity tool useful for monitoring and alerting on specific file change(s) on a range of systems"
 HOMEPAGE="http://sourceforge.net/projects/tripwire"
 SECTION = "security Monitor/Admin"
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=1c069be8dbbe48e89b580ab4ed86c127"
 
 SRCREV = "6e64a9e5b70a909ec439bc5a099e3fcf38c614b0"
 
 SRC_URI = "\
-	git://github.com/Tripwire/tripwire-open-source.git \
+	git://github.com/Tripwire/tripwire-open-source.git;branch=master;protocol=https \
 	file://tripwire.cron \
 	file://tripwire.sh \
 	file://tripwire.txt \
@@ -60,18 +60,18 @@ do_install () {
     install -m 0644 ${WORKDIR}/tripwire.txt ${D}${docdir}/${BPN}
 }
 
-do_install_ptest_append () {
+do_install_ptest:append () {
 	install -d ${D}${PTEST_PATH}/tests
 	cp -a ${S}/src/test-harness/* ${D}${PTEST_PATH}
 	sed -i -e 's@../../../../bin@${sbindir}@'  ${D}${PTEST_PATH}/twtools.pm
 }
 
-FILES_${PN} += "${libdir} ${docdir}/${PN}/*"
-FILES_${PN}-dbg += "${sysconfdir}/${PN}/.debug"
-FILES_${PN}-staticdev += "${localstatedir}/lib/${PN}/lib*.a"
-FILES_${PN}-ptest += "${PTEST_PATH}/tests "
+FILES:${PN} += "${libdir} ${docdir}/${PN}/*"
+FILES:${PN}-dbg += "${sysconfdir}/${PN}/.debug"
+FILES:${PN}-staticdev += "${localstatedir}/lib/${PN}/lib*.a"
+FILES:${PN}-ptest += "${PTEST_PATH}/tests "
 
-RDEPENDS_${PN} += " perl nano msmtp cronie"
-RDEPENDS_${PN}-ptest = " perl lib-perl perl-modules "
+RDEPENDS:${PN} += " perl nano msmtp cronie"
+RDEPENDS:${PN}-ptest = " perl lib-perl perl-modules "
 
-PNBLACKLIST[tripwire] ?= "Upsteram project appears to be abondoned, fails to build with gcc11"
+SKIP_RECIPE[tripwire] ?= "Upsteram project appears to be abondoned, fails to build with gcc11"

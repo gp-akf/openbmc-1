@@ -13,7 +13,7 @@ The QEMU recipe now uses a number of
 :term:`PACKAGECONFIG` options to enable various
 optional features. The method used to set defaults for these options
 means that existing ``local.conf`` files will need to be modified to
-append to ``PACKAGECONFIG`` for ``qemu-native`` and ``nativesdk-qemu``
+append to :term:`PACKAGECONFIG` for ``qemu-native`` and ``nativesdk-qemu``
 instead of setting it. In other words, to enable graphical output for
 QEMU, you should now have these lines in ``local.conf``::
 
@@ -31,7 +31,7 @@ build host is now 1.7.8 because the ``--list`` option is now required by
 BitBake's Git fetcher. As always, if your host distribution does not
 provide a version of Git that meets this requirement, you can use the
 ``buildtools-tarball`` that does. See the
-":ref:`ref-manual/system-requirements:required git, tar, python and gcc versions`"
+":ref:`ref-manual/system-requirements:required git, tar, python, make and gcc versions`"
 section for more information.
 
 .. _migration-1.7-autotools-class-changes:
@@ -43,7 +43,8 @@ The following :ref:`autotools <ref-classes-autotools>` class changes
 occurred:
 
 -  *A separate build directory is now used by default:* The
-   ``autotools`` class has been changed to use a directory for building
+   :ref:`autotools <ref-classes-autotools>` class has been
+   changed to use a directory for building
    (:term:`B`), which is separate from the source directory
    (:term:`S`). This is commonly referred to as ``B != S``, or
    an out-of-tree build.
@@ -54,7 +55,8 @@ occurred:
    manner, you will need to either patch the software so that it can
    build separately, or you will need to change the recipe to inherit
    the :ref:`autotools-brokensep <ref-classes-autotools>` class
-   instead of the ``autotools`` or ``autotools_stage`` classes.
+   instead of the :ref:`autotools <ref-classes-autotools>`
+   or ``autotools_stage`` classes.
 
 -  The ``--foreign`` option is no longer passed to ``automake`` when
    running ``autoconf``: This option tells ``automake`` that a

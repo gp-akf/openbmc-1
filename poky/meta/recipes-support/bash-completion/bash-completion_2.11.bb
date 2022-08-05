@@ -7,7 +7,7 @@ as installing them."
 HOMEPAGE = "https://github.com/scop/bash-completion"
 BUGTRACKER = "https://github.com/scop/bash-completion/issues"
 
-LICENSE = "GPLv2"
+LICENSE = "GPL-2.0-only"
 LIC_FILES_CHKSUM = "file://COPYING;md5=751419260aa954499f7abaabaa882bbe"
 
 SECTION = "console/utils"
@@ -23,20 +23,18 @@ PARALLEL_MAKE = ""
 
 inherit autotools
 
-do_install_append() {
+do_install:append() {
 	# compatdir
 	install -d ${D}${sysconfdir}/bash_completion.d/
 	echo '. ${datadir}/${BPN}/bash_completion' >${D}${sysconfdir}/bash_completion
 
 }
 
-RDEPENDS_${PN} = "bash"
+RDEPENDS:${PN} = "bash"
 
 # Some recipes are providing ${PN}-bash-completion packages
 PACKAGES =+ "${PN}-extra"
-FILES_${PN}-extra = "${datadir}/${BPN}/completions/ \
+FILES:${PN}-extra = "${datadir}/${BPN}/completions/ \
     ${datadir}/${BPN}/helpers/"
-
-FILES_${PN}-dev += "${datadir}/cmake"
 
 BBCLASSEXTEND = "nativesdk"

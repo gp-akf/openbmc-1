@@ -19,25 +19,27 @@ SRC_URI[sha256sum] = "eb16356243218c32f39e07258d72bf8b21e62ce94bb0e8a95e318b1513
 EXTRA_OEMAKE += "CC_FOR_GETHOST='${BUILD_CC}'"
 inherit autotools
 
-do_compile_prepend() {
-    oe_runmake CC_FOR_GETHOST='${BUILD_CC}' CFLAGS='${BUILD_CFLAGS}' gethost
+do_compile:prepend() {
+    oe_runmake CC_FOR_GETHOST='${BUILD_CC}' CFLAGS='${BUILD_CFLAGS}' LDFLAGS='${BUILD_LDFLAGS}' gethost
 }
 
-do_install_append () {
+do_install:append () {
     oe_runmake install.man DESTDIR=${D}
 
     install -d ${D}${base_bindir}
-    ln -s /usr/bin/tcsh ${D}${base_bindir}/tcsh
-    ln -s /usr/bin/tcsh ${D}${base_bindir}/csh
+    if ! ${@bb.utils.contains('DISTRO_FEATURES','usrmerge','true','false',d)}; then
+        ln -s /usr/bin/tcsh ${D}${base_bindir}/tcsh
+        ln -s /usr/bin/tcsh ${D}${base_bindir}/csh
+    fi
     install -d ${D}${sysconfdir}/csh/login.d
     install -m 0644 ${S}/csh.cshrc ${S}/csh.login ${S}/csh.logout ${S}/complete.tcsh ${D}${sysconfdir}
     install -D -m 0644 ${S}/csh-mode.el ${D}${datadir}/emacs/site-lisp/csh-mode.el
 }
 
-FILES_${PN} += "${datadir}/emacs/site-lisp/csh-mode.el"
+FILES:${PN} += "${datadir}/emacs/site-lisp/csh-mode.el"
 
 
-pkg_postinst_${PN} () {
+pkg_postinst:${PN} () {
 #!/bin/sh -e
 echo /usr/bin/tcsh >> $D/etc/shells
 echo /usr/bin/csh >> $D/etc/shells

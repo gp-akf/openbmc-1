@@ -7,7 +7,7 @@ HOMEPAGE = "http://tslib.org/"
 
 AUTHOR = "Martin Kepplinger <martink@posteo.de>"
 SECTION = "base"
-LICENSE = "LGPLv2+ & GPLv2+"
+LICENSE = "LGPL-2.0-or-later & GPL-2.0-or-later"
 LIC_FILES_CHKSUM = "\
     file://COPYING;md5=fc178bcd425090939a8b634d1d6a9594 \
     file://tests/COPYING;md5=a23a74b3f4caf9616230789d94217acb \
@@ -53,31 +53,31 @@ PACKAGECONFIG[galax] = "--enable-galax,--disable-galax"
 PACKAGECONFIG[one-wire-ts-input] = "--enable-one-wire-ts-input,--disable-one-wire-ts-input"
 PACKAGECONFIG[debug] = "--enable-debug,--disable-debug"
 
-do_install_prepend() {
+do_install:prepend() {
     install -m 0644 ${WORKDIR}/ts.conf ${S}/etc/ts.conf
 }
 
-do_install_append() {
+do_install:append() {
     install -d ${D}${sysconfdir}/profile.d/
     install -m 0755 ${WORKDIR}/tslib.sh ${D}${sysconfdir}/profile.d/
 }
 
-RPROVIDES_tslib-conf = "libts-0.0-conf"
+RPROVIDES:tslib-conf = "libts-0.0-conf"
 
 PACKAGES =+ "tslib-conf tslib-tests tslib-calibrate tslib-uinput"
-DEBIAN_NOAUTONAME_tslib-conf = "1"
-DEBIAN_NOAUTONAME_tslib-tests = "1"
-DEBIAN_NOAUTONAME_tslib-calibrate = "1"
-DEBIAN_NOAUTONAME_tslib-uinput = "1"
+DEBIAN_NOAUTONAME:tslib-conf = "1"
+DEBIAN_NOAUTONAME:tslib-tests = "1"
+DEBIAN_NOAUTONAME:tslib-calibrate = "1"
+DEBIAN_NOAUTONAME:tslib-uinput = "1"
 
-RDEPENDS_${PN} = "tslib-conf"
-RRECOMMENDS_${PN} = "pointercal"
+RDEPENDS:${PN} = "tslib-conf"
+RRECOMMENDS:${PN} = "pointercal"
 
-FILES_${PN}-dev += "${libdir}/ts/*.la"
-FILES_tslib-conf = "${sysconfdir}/ts.conf ${sysconfdir}/profile.d/tslib.sh ${datadir}/tslib"
-FILES_${PN} = "${libdir}/*.so.* ${libdir}/ts/*.so*"
-FILES_tslib-calibrate += "${bindir}/ts_calibrate"
-FILES_tslib-uinput += "${bindir}/ts_uinput"
+FILES:${PN}-dev += "${libdir}/ts/*.la"
+FILES:tslib-conf = "${sysconfdir}/ts.conf ${sysconfdir}/profile.d/tslib.sh ${datadir}/tslib"
+FILES:${PN} = "${libdir}/*.so.* ${libdir}/ts/*.so*"
+FILES:tslib-calibrate += "${bindir}/ts_calibrate"
+FILES:tslib-uinput += "${bindir}/ts_uinput"
 
-FILES_tslib-tests = "${bindir}/ts_harvest ${bindir}/ts_print ${bindir}/ts_print_raw ${bindir}/ts_print_mt \
+FILES:tslib-tests = "${bindir}/ts_harvest ${bindir}/ts_print ${bindir}/ts_print_raw ${bindir}/ts_print_mt \
                      ${bindir}/ts_test ${bindir}/ts_test_mt ${bindir}/ts_verify ${bindir}/ts_finddev ${bindir}/ts_conf"

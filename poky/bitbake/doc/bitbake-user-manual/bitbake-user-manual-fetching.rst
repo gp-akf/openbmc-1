@@ -51,7 +51,7 @@ This code unpacks the downloaded files to the specified by ``WORKDIR``.
    examine the OpenEmbedded class file ``base.bbclass``
    .
 
-The ``SRC_URI`` and ``WORKDIR`` variables are not hardcoded into the
+The :term:`SRC_URI` and ``WORKDIR`` variables are not hardcoded into the
 fetcher, since those fetcher methods can be (and are) called with
 different variable names. In OpenEmbedded for example, the shared state
 (sstate) code uses the fetch module to fetch the sstate files.
@@ -64,17 +64,17 @@ URLs by looking for source files in a specific search order:
    :term:`PREMIRRORS` variable.
 
 -  *Source URI:* If pre-mirrors fail, BitBake uses the original URL (e.g
-   from ``SRC_URI``).
+   from :term:`SRC_URI`).
 
 -  *Mirror Sites:* If fetch failures occur, BitBake next uses mirror
    locations as defined by the :term:`MIRRORS` variable.
 
 For each URL passed to the fetcher, the fetcher calls the submodule that
 handles that particular URL type. This behavior can be the source of
-some confusion when you are providing URLs for the ``SRC_URI`` variable.
+some confusion when you are providing URLs for the :term:`SRC_URI` variable.
 Consider the following two URLs::
 
-   http://git.yoctoproject.org/git/poky;protocol=git
+   https://git.yoctoproject.org/git/poky;protocol=git
    git://git.yoctoproject.org/git/poky;protocol=http
 
 In the former case, the URL is passed to the ``wget`` fetcher, which does not
@@ -84,18 +84,18 @@ fetcher does know how to use HTTP as a transport.
 Here are some examples that show commonly used mirror definitions::
 
    PREMIRRORS ?= "\
-      bzr://.*/.\*  http://somemirror.org/sources/ \\n \
-      cvs://.*/.\*  http://somemirror.org/sources/ \\n \
-      git://.*/.\*  http://somemirror.org/sources/ \\n \
-      hg://.*/.\*   http://somemirror.org/sources/ \\n \
-      osc://.*/.\*  http://somemirror.org/sources/ \\n \
-      p4://.*/.\*   http://somemirror.org/sources/ \\n \
-     svn://.*/.\*   http://somemirror.org/sources/ \\n"
+      bzr://.*/.\*  http://somemirror.org/sources/ \
+      cvs://.*/.\*  http://somemirror.org/sources/ \
+      git://.*/.\*  http://somemirror.org/sources/ \
+      hg://.*/.\*   http://somemirror.org/sources/ \
+      osc://.*/.\*  http://somemirror.org/sources/ \
+      p4://.*/.\*   http://somemirror.org/sources/ \
+     svn://.*/.\*   http://somemirror.org/sources/"
 
    MIRRORS =+ "\
-      ftp://.*/.\*   http://somemirror.org/sources/ \\n \
-      http://.*/.\*  http://somemirror.org/sources/ \\n \
-      https://.*/.\* http://somemirror.org/sources/ \\n"
+      ftp://.*/.\*   http://somemirror.org/sources/ \
+      http://.*/.\*  http://somemirror.org/sources/ \
+      https://.*/.\* http://somemirror.org/sources/"
 
 It is useful to note that BitBake
 supports cross-URLs. It is possible to mirror a Git repository on an
@@ -110,14 +110,14 @@ which is specified by the :term:`DL_DIR` variable.
 File integrity is of key importance for reproducing builds. For
 non-local archive downloads, the fetcher code can verify SHA-256 and MD5
 checksums to ensure the archives have been downloaded correctly. You can
-specify these checksums by using the ``SRC_URI`` variable with the
+specify these checksums by using the :term:`SRC_URI` variable with the
 appropriate varflags as follows::
 
    SRC_URI[md5sum] = "value"
    SRC_URI[sha256sum] = "value"
 
 You can also specify the checksums as
-parameters on the ``SRC_URI`` as shown below::
+parameters on the :term:`SRC_URI` as shown below::
 
   SRC_URI = "http://example.com/foobar.tar.bz2;md5sum=4a8e0f237e961fd7785d19d07fdb994d"
 
@@ -129,7 +129,7 @@ shows how you name the URIs::
    SRC_URI[foo.md5sum] = 4a8e0f237e961fd7785d19d07fdb994d
 
 After a file has been downloaded and
-has had its checksum checked, a ".done" stamp is placed in ``DL_DIR``.
+has had its checksum checked, a ".done" stamp is placed in :term:`DL_DIR`.
 BitBake uses this stamp during subsequent builds to avoid downloading or
 comparing a checksum for the file again.
 
@@ -143,6 +143,10 @@ download without a checksum triggers an error message. The
 :term:`BB_NO_NETWORK` variable can be used to
 make any attempted network access a fatal error, which is useful for
 checking that mirrors are complete as well as other things.
+
+If :term:`BB_CHECK_SSL_CERTS` is set to ``0`` then SSL certificate checking will
+be disabled. This variable defaults to ``1`` so SSL certificates are normally
+checked.
 
 .. _bb-the-unpack:
 
@@ -162,6 +166,9 @@ govern the behavior of the unpack stage:
 
 -  *dos:* Applies to ``.zip`` and ``.jar`` files and specifies whether
    to use DOS line ending conversion on text files.
+
+-  *striplevel:* Strip specified number of leading components (levels)
+   from file names on extraction
 
 -  *subdir:* Unpacks the specific URL to the specified subdirectory
    within the root directory.
@@ -221,6 +228,11 @@ the downloaded file to be specified. Specifying the name of the
 downloaded file is useful for avoiding collisions in
 :term:`DL_DIR` when dealing with multiple files that
 have the same name.
+
+If a username and password are specified in the ``SRC_URI``, a Basic
+Authorization header will be added to each request, including across redirects.
+To instead limit the Authorization header to the first request, add
+"redirectauth=0" to the list of parameters.
 
 Some example URLs are as follows::
 
@@ -384,6 +396,19 @@ This fetcher supports the following parameters:
    protocol is "file". You can also use "http", "https", "ssh" and
    "rsync".
 
+   .. note::
+
+     When ``protocol`` is "ssh", the URL expected in :term:`SRC_URI` differs
+     from the one that is typically passed to ``git clone`` command and provided
+     by the Git server to fetch from. For example, the URL returned by GitLab
+     server for ``mesa`` when cloning over SSH is
+     ``git@gitlab.freedesktop.org:mesa/mesa.git``, however the expected URL in
+     :term:`SRC_URI` is the following::
+
+       SRC_URI = "git://git@gitlab.freedesktop.org/mesa/mesa.git;branch=main;protocol=ssh;..."
+
+     Note the ``:`` character changed for a ``/`` before the path to the project.
+
 -  *"nocheckout":* Tells the fetcher to not checkout source code when
    unpacking when set to "1". Set this option for the URL where there is
    a custom routine to checkout code. The default is "0".
@@ -407,9 +432,9 @@ This fetcher supports the following parameters:
    raw Git metadata is provided. This parameter implies the "nocheckout"
    parameter as well.
 
--  *"branch":* The branch(es) of the Git tree to clone. If unset, this
-   is assumed to be "master". The number of branch parameters much match
-   the number of name parameters.
+-  *"branch":* The branch(es) of the Git tree to clone. Unless
+   "nobranch" is set to "1", this is a mandatory parameter. The number of
+   branch parameters must match the number of name parameters.
 
 -  *"rev":* The revision to use for the checkout. The default is
    "master".
@@ -432,13 +457,21 @@ This fetcher supports the following parameters:
 
 Here are some example URLs::
 
-   SRC_URI = "git://git.oe.handhelds.org/git/vip.git;tag=version-1"
-   SRC_URI = "git://git.oe.handhelds.org/git/vip.git;protocol=http"
+   SRC_URI = "git://github.com/fronteed/icheck.git;protocol=https;branch=${PV};tag=${PV}"
+   SRC_URI = "git://github.com/asciidoc/asciidoc-py;protocol=https;branch=main"
+   SRC_URI = "git://git@gitlab.freedesktop.org/mesa/mesa.git;branch=main;protocol=ssh;..."
+
+.. note::
+
+   When using ``git`` as the fetcher of the main source code of your software,
+   ``S`` should be set accordingly::
+
+       S = "${WORKDIR}/git"
 
 .. note::
 
    Specifying passwords directly in ``git://`` urls is not supported.
-   There are several reasons: ``SRC_URI`` is often written out to logs and
+   There are several reasons: :term:`SRC_URI` is often written out to logs and
    other places, and that could easily leak passwords; it is also all too
    easy to share metadata without removing passwords. SSH keys, ``~/.netrc``
    and ``~/.ssh/config`` files can be used as alternatives.
@@ -487,7 +520,7 @@ To use this fetcher, make sure your recipe has proper
 The fetcher uses the ``rcleartool`` or
 ``cleartool`` remote client, depending on which one is available.
 
-Following are options for the ``SRC_URI`` statement:
+Following are options for the :term:`SRC_URI` statement:
 
 -  *vob*: The name, which must include the prepending "/" character,
    of the ClearCase VOB. This option is required.
@@ -549,7 +582,7 @@ password if you do not wish to keep those values in a recipe itself. If
 you choose not to use ``P4CONFIG``, or to explicitly set variables that
 ``P4CONFIG`` can contain, you can specify the ``P4PORT`` value, which is
 the server's URL and port number, and you can specify a username and
-password directly in your recipe within ``SRC_URI``.
+password directly in your recipe within :term:`SRC_URI`.
 
 Here is an example that relies on ``P4CONFIG`` to specify the server URL
 and port, username, and password, and fetches the Head Revision::
@@ -655,6 +688,98 @@ Here is an example URL::
 
 It can also be used when setting mirrors definitions using the :term:`PREMIRRORS` variable.
 
+.. _crate-fetcher:
+
+Crate Fetcher (``crate://``)
+----------------------------
+
+This submodule fetches code for
+`Rust language "crates" <https://doc.rust-lang.org/reference/glossary.html?highlight=crate#crate>`__
+corresponding to Rust libraries and programs to compile. Such crates are typically shared
+on https://crates.io/ but this fetcher supports other crate registries too.
+
+The format for the :term:`SRC_URI` setting must be::
+
+   SRC_URI = "crate://REGISTRY/NAME/VERSION"
+
+Here is an example URL::
+
+   SRC_URI = "crate://crates.io/glob/0.2.11"
+
+.. _npm-fetcher:
+
+NPM Fetcher (``npm://``)
+------------------------
+
+This submodule fetches source code from an
+`NPM <https://en.wikipedia.org/wiki/Npm_(software)>`__
+Javascript package registry.
+
+The format for the :term:`SRC_URI` setting must be::
+
+   SRC_URI = "npm://some.registry.url;OptionA=xxx;OptionB=xxx;..."
+
+This fetcher supports the following parameters:
+
+-  *"package":* The NPM package name. This is a mandatory parameter.
+
+-  *"version":* The NPM package version. This is a mandatory parameter.
+
+-  *"downloadfilename":* Specifies the filename used when storing the downloaded file.
+
+-  *"destsuffix":* Specifies the directory to use to unpack the package (default: ``npm``).
+
+Note that NPM fetcher only fetches the package source itself. The dependencies
+can be fetched through the `npmsw-fetcher`_.
+
+Here is an example URL with both fetchers::
+
+   SRC_URI = " \
+       npm://registry.npmjs.org/;package=cute-files;version=${PV} \
+       npmsw://${THISDIR}/${BPN}/npm-shrinkwrap.json \
+       "
+
+See :yocto_docs:`Creating Node Package Manager (NPM) Packages
+</dev-manual/common-tasks.html#creating-node-package-manager-npm-packages>`
+in the Yocto Project manual for details about using
+:yocto_docs:`devtool <https://docs.yoctoproject.org/ref-manual/devtool-reference.html>`
+to automatically create a recipe from an NPM URL.
+
+.. _npmsw-fetcher:
+
+NPM shrinkwrap Fetcher (``npmsw://``)
+-------------------------------------
+
+This submodule fetches source code from an
+`NPM shrinkwrap <https://docs.npmjs.com/cli/v8/commands/npm-shrinkwrap>`__
+description file, which lists the dependencies
+of an NPM package while locking their versions.
+
+The format for the :term:`SRC_URI` setting must be::
+
+   SRC_URI = "npmsw://some.registry.url;OptionA=xxx;OptionB=xxx;..."
+
+This fetcher supports the following parameters:
+
+-  *"dev":* Set this parameter to ``1`` to install "devDependencies".
+
+-  *"destsuffix":* Specifies the directory to use to unpack the dependencies
+   (``${S}`` by default).
+
+Note that the shrinkwrap file can also be provided by the recipe for
+the package which has such dependencies, for example::
+
+   SRC_URI = " \
+       npm://registry.npmjs.org/;package=cute-files;version=${PV} \
+       npmsw://${THISDIR}/${BPN}/npm-shrinkwrap.json \
+       "
+
+Such a file can automatically be generated using
+:yocto_docs:`devtool <https://docs.yoctoproject.org/ref-manual/devtool-reference.html>`
+as described in the :yocto_docs:`Creating Node Package Manager (NPM) Packages
+</dev-manual/common-tasks.html#creating-node-package-manager-npm-packages>`
+section of the Yocto Project.
+
 Other Fetchers
 --------------
 
@@ -663,8 +788,6 @@ Fetch submodules also exist for the following:
 -  Bazaar (``bzr://``)
 
 -  Mercurial (``hg://``)
-
--  npm (``npm://``)
 
 -  OSC (``osc://``)
 
@@ -680,4 +803,4 @@ submodules. However, you might find the code helpful and readable.
 Auto Revisions
 ==============
 
-We need to document ``AUTOREV`` and ``SRCREV_FORMAT`` here.
+We need to document ``AUTOREV`` and :term:`SRCREV_FORMAT` here.

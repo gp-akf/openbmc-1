@@ -12,12 +12,12 @@ PV = "1.0+git${SRCPV}"
 
 KCS_DEVICE ?= "ipmi-kcs3"
 
-SYSTEMD_SERVICE_${PN} = "${PN}@${KCS_DEVICE}.service"
-FILES_${PN} += "${systemd_system_unitdir}/${PN}@.service"
+SYSTEMD_SERVICE:${PN} = "${PN}@${KCS_DEVICE}.service"
+FILES:${PN} += "${systemd_system_unitdir}/${PN}@.service"
 
 PROVIDES += "virtual/obmc-host-ipmi-hw"
-RPROVIDES_${PN} += "virtual-obmc-host-ipmi-hw"
-RRECOMMENDS_${PN} += "phosphor-ipmi-host"
+RPROVIDES:${PN} += "virtual-obmc-host-ipmi-hw"
+RRECOMMENDS:${PN} += "phosphor-ipmi-host"
 
 DEPENDS += " \
         fmt \
@@ -28,5 +28,5 @@ DEPENDS += " \
         "
 
 S = "${WORKDIR}/git"
-SRC_URI = "git://github.com/openbmc/kcsbridge.git"
-SRCREV = "03e6defcbca99c9c00cd37c4afb1d2b415a92acd"
+SRC_URI = "git://github.com/openbmc/kcsbridge.git;branch=master;protocol=https"
+SRCREV = "7580a8e60d868b5bcb1a8f8d276374afe7c0983a"

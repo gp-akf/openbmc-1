@@ -5,8 +5,8 @@ LIC_FILES_CHKSUM = "file://LICENSE;md5=e3fc50a88d0a364313df4b21ef20c29e"
 PR = "r1"
 PV = "1.0+git${SRCPV}"
 
-SRC_URI = "git://github.com/openbmc/phosphor-misc"
-SRCREV = "688e9134a83379393ddde6aab0602c64e956153d"
+SRC_URI = "git://github.com/openbmc/phosphor-misc;branch=master;protocol=https"
+SRCREV = "746d56c3888ec8f86aa1442780845e3f247ab5a0"
 
 S = "${WORKDIR}/git"
 
@@ -23,9 +23,7 @@ PHOSPHOR_MISC_PACKAGES = " \
     ${@bb.utils.contains('PACKAGECONFIG', 'usb-ctrl', '${PN}-usb-ctrl', '', d)} \
     "
 
-PACKAGES_remove = "${PN}"
-RDEPENDS_${PN}-dev = ""
-
+PACKAGES = "${PHOSPHOR_MISC_PACKAGES}"
 PACKAGE_BEFORE_PN += "${PHOSPHOR_MISC_PACKAGES}"
 SYSTEMD_PACKAGES = "${PHOSPHOR_MISC_PACKAGES}"
 
@@ -42,20 +40,20 @@ PACKAGECONFIG[http-redirect-awk] = "-Dhttp-redirect=enabled, -Dhttp-redirect=dis
 PACKAGECONFIG[usb-ctrl] = "-Dusb-ctrl=enabled, -Dusb-ctrl=disabled"
 
 # first-boot-set-hostname
-FILES_${PN}-first-boot-set-hostname = "${bindir}/first-boot-set-hostname.sh"
-SYSTEMD_SERVICE_${PN}-first-boot-set-hostname = "first-boot-set-hostname.service"
+FILES:${PN}-first-boot-set-hostname = "${bindir}/first-boot-set-hostname.sh"
+SYSTEMD_SERVICE:${PN}-first-boot-set-hostname = "first-boot-set-hostname.service"
 
 # first-boot-set-mac
-FILES_${PN}-first-boot-set-mac = "${bindir}/first-boot-set-mac.sh"
-SYSTEMD_SERVICE_${PN}-first-boot-set-mac = "first-boot-set-mac@.service"
+FILES:${PN}-first-boot-set-mac = "${bindir}/first-boot-set-mac.sh"
+SYSTEMD_SERVICE:${PN}-first-boot-set-mac = "first-boot-set-mac@.service"
 
 # http-redirect-awk
-FILES_${PN}-http-redirect-awk = "${bindir}/http-redirect.awk"
-SYSTEMD_SERVICE_${PN}-http-redirect-awk = " \
+FILES:${PN}-http-redirect-awk = "${bindir}/http-redirect.awk"
+SYSTEMD_SERVICE:${PN}-http-redirect-awk = " \
     http-redirect@.service \
     http-redirect.socket \
     "
-RDEPENDS_${PN}-http-redirect-awk = "${VIRTUAL-RUNTIME_base-utils}"
+RDEPENDS:${PN}-http-redirect-awk = "${VIRTUAL-RUNTIME_base-utils}"
 
 # usb-ctrl
-FILES_${PN}-usb-ctrl = "${bindir}/usb-ctrl"
+FILES:${PN}-usb-ctrl = "${bindir}/usb-ctrl"

@@ -20,36 +20,36 @@ PACKAGE_BEFORE_PN = " \
         ${PN}-dbus \
         "
 
-RDEPENDS_${PN}-utils-ns += "${PN}-ns"
-RDEPENDS_${PN}-dbus-ns += "${PN}-ns"
-RDEPENDS_${PN}-utils += "${PN}-utils-ns"
-RDEPENDS_${PN}-wsgi-apps-ns += "${PN}-wsgi-ns"
-RDEPENDS_${PN}-wsgi-ns += "${PN}-ns"
-RDEPENDS_${PN}-dbus += " \
+RDEPENDS:${PN}-utils-ns += "${PN}-ns"
+RDEPENDS:${PN}-dbus-ns += "${PN}-ns"
+RDEPENDS:${PN}-utils += "${PN}-utils-ns"
+RDEPENDS:${PN}-wsgi-apps-ns += "${PN}-wsgi-ns"
+RDEPENDS:${PN}-wsgi-ns += "${PN}-ns"
+RDEPENDS:${PN}-dbus += " \
         ${PN}-dbus-ns \
         python-dbus \
         python-xml \
         python-json \
         python-pickle \
         "
-RDEPENDS_${PN} += " \
+RDEPENDS:${PN} += " \
         ${PN}-ns \
         ${PN}-dbus \
         python-subprocess \
         python-dbus \
         "
 
-FILES_${PN}-ns = "${PYTHON_SITEPACKAGES_DIR}/obmc/__init__.py*"
-FILES_${PN}-utils-ns = "${PYTHON_SITEPACKAGES_DIR}/obmc/utils/__init__.py*"
-FILES_${PN}-dbus-ns = "${PYTHON_SITEPACKAGES_DIR}/obmc/dbuslib/__init__.py*"
-FILES_${PN}-wsgi-ns = "${PYTHON_SITEPACKAGES_DIR}/obmc/wsgi/__init__.py*"
-FILES_${PN}-wsgi-apps-ns = "${PYTHON_SITEPACKAGES_DIR}/obmc/wsgi/apps/__init__.py*"
+FILES:${PN}-ns = "${PYTHON_SITEPACKAGES_DIR}/obmc/__init__.py*"
+FILES:${PN}-utils-ns = "${PYTHON_SITEPACKAGES_DIR}/obmc/utils/__init__.py*"
+FILES:${PN}-dbus-ns = "${PYTHON_SITEPACKAGES_DIR}/obmc/dbuslib/__init__.py*"
+FILES:${PN}-wsgi-ns = "${PYTHON_SITEPACKAGES_DIR}/obmc/wsgi/__init__.py*"
+FILES:${PN}-wsgi-apps-ns = "${PYTHON_SITEPACKAGES_DIR}/obmc/wsgi/apps/__init__.py*"
 
-FILES_${PN}-utils = "${PYTHON_SITEPACKAGES_DIR}/obmc/utils"
-FILES_${PN}-dbus = "${PYTHON_SITEPACKAGES_DIR}/obmc/dbuslib"
+FILES:${PN}-utils = "${PYTHON_SITEPACKAGES_DIR}/obmc/utils"
+FILES:${PN}-dbus = "${PYTHON_SITEPACKAGES_DIR}/obmc/dbuslib"
 
-SRC_URI += "git://github.com/openbmc/pyphosphor"
+SRC_URI += "git://github.com/openbmc/pyphosphor;branch=master;protocol=https"
 
-SRCREV = "d2aadf1220b03580ab5f93fd15e068040cdb895b"
+SRCREV = "cb240aa1ed95799d2ea8bde951c6ed443839a7e0"
 
 S = "${WORKDIR}/git"

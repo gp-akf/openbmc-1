@@ -1,5 +1,5 @@
 
-# Zap the root password if debug-tweaks feature is not enabled
+# Zap the root password if debug-tweaks and empty-root-password features are not enabled
 ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains_any("IMAGE_FEATURES", [ 'debug-tweaks', 'empty-root-password' ], "", "zap_empty_root_password; ",d)}'
 
 # Allow dropbear/openssh to accept logins from accounts with an empty password string if debug-tweaks or allow-empty-password is enabled
@@ -8,7 +8,7 @@ ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains_any("IMAGE_FEATURES", [ 'deb
 # Allow dropbear/openssh to accept root logins if debug-tweaks or allow-root-login is enabled
 ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains_any("IMAGE_FEATURES", [ 'debug-tweaks', 'allow-root-login' ], "ssh_allow_root_login; ", "",d)}'
 
-# Enable postinst logging if debug-tweaks is enabled
+# Enable postinst logging if debug-tweaks or post-install-logging is enabled
 ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains_any("IMAGE_FEATURES", [ 'debug-tweaks', 'post-install-logging' ], "postinst_enable_logging; ", "",d)}'
 
 # Create /etc/timestamp during image construction to give a reasonably sane default time setting
@@ -21,9 +21,9 @@ ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains("IMAGE_FEATURES", "read-only
 # otherwise kernel or initramfs end up mounting the rootfs read/write
 # (the default) if supported by the underlying storage.
 #
-# We do this with _append because the default value might get set later with ?=
+# We do this with :append because the default value might get set later with ?=
 # and we don't want to disable such a default that by setting a value here.
-APPEND_append = '${@bb.utils.contains("IMAGE_FEATURES", "read-only-rootfs", " ro", "", d)}'
+APPEND:append = '${@bb.utils.contains("IMAGE_FEATURES", "read-only-rootfs", " ro", "", d)}'
 
 # Generates test data file with data store variables expanded in json format
 ROOTFS_POSTPROCESS_COMMAND += "write_image_test_data; "
@@ -39,6 +39,8 @@ ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains("DISTRO_FEATURES", "systemd"
 
 ROOTFS_POSTPROCESS_COMMAND += 'empty_var_volatile;'
 
+ROOTFS_POSTPROCESS_COMMAND += '${@bb.utils.contains("DISTRO_FEATURES", "overlayfs", "overlayfs_qa_check; overlayfs_postprocess;", "", d)}'
+
 inherit image-artifact-names
 
 # Sort the user and group entries in /etc by ID in order to make the content
@@ -50,7 +52,7 @@ inherit image-artifact-names
 # the numeric IDs of dynamically created entries remain stable.
 #
 # We want this to run as late as possible, in particular after
-# systemd_sysusers_create and set_user_group. Using _append is not
+# systemd_sysusers_create and set_user_group. Using :append is not
 # enough for that, set_user_group is added that way and would end
 # up running after us.
 SORT_PASSWD_POSTPROCESS_COMMAND ??= " sort_passwd; "
@@ -60,7 +62,7 @@ python () {
 }
 
 systemd_create_users () {
-	for conffile in ${IMAGE_ROOTFS}/usr/lib/sysusers.d/systemd.conf ${IMAGE_ROOTFS}/usr/lib/sysusers.d/systemd-remote.conf; do
+	for conffile in ${IMAGE_ROOTFS}/usr/lib/sysusers.d/*.conf; do
 		[ -e $conffile ] || continue
 		grep -v "^#" $conffile | sed -e '/^$/d' | while read type name id comment; do
 		if [ "$type" = "u" ]; then
@@ -76,12 +78,8 @@ systemd_create_users () {
 			eval groupadd --root ${IMAGE_ROOTFS} $groupadd_params || true
 		elif [ "$type" = "m" ]; then
 			group=$id
-			if [ ! `grep -q "^${group}:" ${IMAGE_ROOTFS}${sysconfdir}/group` ]; then
-				eval groupadd --root ${IMAGE_ROOTFS} --system $group
-			fi
-			if [ ! `grep -q "^${name}:" ${IMAGE_ROOTFS}${sysconfdir}/passwd` ]; then
-				eval useradd --root ${IMAGE_ROOTFS} --shell /sbin/nologin --system $name
-			fi
+			eval groupadd --root ${IMAGE_ROOTFS} --system $group || true
+			eval useradd --root ${IMAGE_ROOTFS} --shell /sbin/nologin --system $name --no-user-group || true
 			eval usermod --root ${IMAGE_ROOTFS} -a -G $group $name
 		fi
 		done
@@ -142,7 +140,7 @@ read_only_rootfs_hook () {
 }
 
 #
-# This function is intended to disallow empty root password if 'debug-tweaks' is not in IMAGE_FEATURES.
+# This function disallows empty root passwords
 #
 zap_empty_root_password () {
 	if [ -e ${IMAGE_ROOTFS}/etc/shadow ]; then
@@ -204,7 +202,7 @@ python sort_passwd () {
 }
 
 #
-# Enable postinst logging if debug-tweaks is enabled
+# Enable postinst logging
 #
 postinst_enable_logging () {
 	mkdir -p ${IMAGE_ROOTFS}${sysconfdir}/default
@@ -216,8 +214,8 @@ postinst_enable_logging () {
 # Modify systemd default target
 #
 set_systemd_default_target () {
-	if [ -d ${IMAGE_ROOTFS}${sysconfdir}/systemd/system -a -e ${IMAGE_ROOTFS}${systemd_unitdir}/system/${SYSTEMD_DEFAULT_TARGET} ]; then
-		ln -sf ${systemd_unitdir}/system/${SYSTEMD_DEFAULT_TARGET} ${IMAGE_ROOTFS}${sysconfdir}/systemd/system/default.target
+	if [ -d ${IMAGE_ROOTFS}${sysconfdir}/systemd/system -a -e ${IMAGE_ROOTFS}${systemd_system_unitdir}/${SYSTEMD_DEFAULT_TARGET} ]; then
+		ln -sf ${systemd_system_unitdir}/${SYSTEMD_DEFAULT_TARGET} ${IMAGE_ROOTFS}${sysconfdir}/systemd/system/default.target
 	fi
 }
 
@@ -269,9 +267,10 @@ python write_image_manifest () {
 
     if os.path.exists(manifest_name) and link_name:
         manifest_link = deploy_dir + "/" + link_name + ".manifest"
-        if os.path.lexists(manifest_link):
-            os.remove(manifest_link)
-        os.symlink(os.path.basename(manifest_name), manifest_link)
+        if manifest_link != manifest_name:
+            if os.path.lexists(manifest_link):
+                os.remove(manifest_link)
+            os.symlink(os.path.basename(manifest_name), manifest_link)
 }
 
 # Can be used to create /etc/timestamp during image construction to give a reasonably
@@ -341,9 +340,10 @@ python write_image_test_data() {
 
     if os.path.exists(testdata_name) and link_name:
         testdata_link = os.path.join(deploy_dir, "%s.testdata.json" % link_name)
-        if os.path.lexists(testdata_link):
-            os.remove(testdata_link)
-        os.symlink(os.path.basename(testdata_name), testdata_link)
+        if testdata_link != testdata_name:
+            if os.path.lexists(testdata_link):
+                os.remove(testdata_link)
+            os.symlink(os.path.basename(testdata_name), testdata_link)
 }
 write_image_test_data[vardepsexclude] += "TOPDIR"
 
@@ -372,4 +372,64 @@ rootfs_reproducible () {
 			sed -i -e 's@\bmtime="[0-9][0-9]*"@mtime="'${REPRODUCIBLE_TIMESTAMP_ROOTFS}'"@g'
 		fi
 	fi
+}
+
+# Perform a dumb check for unit existence, not its validity
+python overlayfs_qa_check() {
+    from oe.overlayfs import mountUnitName
+
+    overlayMountPoints = d.getVarFlags("OVERLAYFS_MOUNT_POINT") or {}
+    imagepath = d.getVar("IMAGE_ROOTFS")
+    sysconfdir = d.getVar("sysconfdir")
+    searchpaths = [oe.path.join(imagepath, sysconfdir, "systemd", "system"),
+                   oe.path.join(imagepath, d.getVar("systemd_system_unitdir"))]
+    fstabpath = oe.path.join(imagepath, sysconfdir, "fstab")
+
+    if not any(os.path.exists(path) for path in [*searchpaths, fstabpath]):
+        return
+
+    fstabDevices = []
+    if os.path.isfile(fstabpath):
+        with open(fstabpath, 'r') as f:
+            for line in f:
+                if line[0] == '#':
+                    continue
+                path = line.split(maxsplit=2)
+                if len(path) > 2:
+                    fstabDevices.append(path[1])
+
+    allUnitExist = True;
+    for mountPoint in overlayMountPoints:
+        qaSkip = (d.getVarFlag("OVERLAYFS_QA_SKIP", mountPoint) or "").split()
+        if "mount-configured" in qaSkip:
+            continue
+
+        mountPath = d.getVarFlag('OVERLAYFS_MOUNT_POINT', mountPoint)
+        if mountPath in fstabDevices:
+            continue
+
+        mountUnit = mountUnitName(mountPath)
+        if any(os.path.isfile(oe.path.join(dirpath, mountUnit))
+               for dirpath in searchpaths):
+            continue
+
+        bb.warn(f'Mount path {mountPath} not found in fstab and unit '
+                f'{mountUnit} not found in systemd unit directories.')
+        bb.warn(f'Skip this check by setting OVERLAYFS_QA_SKIP[{mountPoint}] = '
+                '"mount-configured"')
+        allUnitExist = False;
+
+    if not allUnitExist:
+        bb.fatal('Not all mount paths and units are installed in the image')
+}
+
+python overlayfs_postprocess() {
+    import shutil
+
+    # install helper script
+    helperScriptName = "overlayfs-create-dirs.sh"
+    helperScriptSource = oe.path.join(d.getVar("COREBASE"), "meta/files", helperScriptName)
+    helperScriptDest = oe.path.join(d.getVar("IMAGE_ROOTFS"), "/usr/sbin/", helperScriptName)
+    shutil.copyfile(helperScriptSource, helperScriptDest)
+    os.chmod(helperScriptDest, 0o755)
 }

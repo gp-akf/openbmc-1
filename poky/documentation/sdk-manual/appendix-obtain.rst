@@ -163,7 +163,7 @@ build the SDK installer. Follow these steps:
          SDK installer. Doing so ensures that the eventual SDK
          installation process installs the appropriate library packages
          as part of the SDK. Following is an example using ``libc``
-         static development libraries: TOOLCHAIN_TARGET_TASK_append = "
+         static development libraries: TOOLCHAIN_TARGET_TASK:append = "
          libc-staticdev"
 
 7. *Run the Installer:* You can now run the SDK installer from
@@ -265,8 +265,7 @@ install the Standard SDK by running the ``*.sh`` SDK installation
 script:
 
 .. image:: figures/sdk-installed-standard-sdk-directory.png
-   :scale: 80%
-   :align: center
+   :scale: 100%
 
 The installed SDK consists of an environment setup script for the SDK, a
 configuration file for the target, a version file for the target, and
